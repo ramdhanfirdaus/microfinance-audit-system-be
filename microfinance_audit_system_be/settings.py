@@ -37,9 +37,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -110,6 +113,13 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+
+# CORS Configuration
+# https://pypi.org/project/django-cors-headers/3.11.0/
+# Set CORS_ALLOW_ALL_ORIGIN to false and add CORS_ALLOWED_ORIGINS or CORS_ALLOWED_ORIGIN_REGEXES to add allowed origins 
+
+CORS_ALLOW_ALL_ORIGINS = True
 
 
 # Internationalization
