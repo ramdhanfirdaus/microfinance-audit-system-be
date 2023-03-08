@@ -9,3 +9,6 @@ def login(request):
     if user is not None and user.is_active:
         auth.login(user)
         return 
+
+def register(request):
+    pass
