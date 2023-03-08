@@ -25,10 +25,16 @@ class AuditCategoryModelTestCase(TestCase):
 class AuditTypeModelTestCase(TestCase):
     def setUp(self):
         self.label = "General"
-        self.obj = AuditType.objects.create(label = self.label)
+        self.category = [{'label' : 'Kredit'}, 
+                         {'label': 'Utang'}]
+        self.obj = AuditType.objects.create(label = self.label, category = self.category)
 
     def test_create_audit_type(self):
         assert isinstance(self.obj, AuditType)
     
     def test_field_type(self):
         assert self.label == self.obj.label
+
+    def test_field_category(self):
+        assert self.category[1] == self.obj.category[1]
+        assert self.category[2] == self.obj.category[2]
