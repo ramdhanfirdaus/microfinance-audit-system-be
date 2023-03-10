@@ -80,16 +80,16 @@ WSGI_APPLICATION = 'microfinance_audit_system_be.wsgi.application'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
 DATABASES = {
-       'default': {
-           'ENGINE': 'djongo',
-           'NAME': 'masys',
-           'CLIENT' : {
-            'host' : 'mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true&w=majority',
-            'USERNAME' : 'cugil',
-            'PASSWORD' : 'agill'
-           }
-       }
-   }
+    'default': {
+        'ENGINE': 'djongo',
+        'NAME': 'masys',
+        'CLIENT': {
+            'host': 'mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true&w=majority',
+            'USERNAME': 'cugil',
+            'PASSWORD': 'agill'
+        }
+    }
+}
 
 # DATABASES = {
 #     'default': {
@@ -105,6 +105,9 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ]
 }
 
 
@@ -150,6 +153,13 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer",
 }
 
+JWT_AUTH = {
+    'JWT_VERIFY': True,
+    'JWT_VERIFY_EXPIRATION': True,
+    'JWT_EXPIRATION_DELTA': timedelta(seconds=3000),
+    'JWT_AUTH_HEADER_PREFIX': 'Bearer',
+}
+
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -172,7 +182,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # CORS Configuration
 # https://pypi.org/project/django-cors-headers/3.11.0/
-# Set CORS_ALLOW_ALL_ORIGIN to false and add CORS_ALLOWED_ORIGINS or CORS_ALLOWED_ORIGIN_REGEXES to add allowed origins 
+# Set CORS_ALLOW_ALL_ORIGIN to false and add CORS_ALLOWED_ORIGINS or CORS_ALLOWED_ORIGIN_REGEXES to add allowed origins
 
 CORS_ALLOW_ALL_ORIGINS = True
 

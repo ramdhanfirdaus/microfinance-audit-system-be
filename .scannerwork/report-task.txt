@@ -1,0 +1,6 @@
+projectKey=ppl-fasilkom-ui_2023_BB_microfinance-audit-system_microfinance-audit-system-be_AYadDgNeDKZBEovD9PlE
+serverUrl=https://sonarqube.cs.ui.ac.id
+serverVersion=8.9.2.46101
+dashboardUrl=https://sonarqube.cs.ui.ac.id/dashboard?id=ppl-fasilkom-ui_2023_BB_microfinance-audit-system_microfinance-audit-system-be_AYadDgNeDKZBEovD9PlE
+ceTaskId=AYbJSWn9oHIBEBqG9P05
+ceTaskUrl=https://sonarqube.cs.ui.ac.id/api/ce/task?id=AYbJSWn9oHIBEBqG9P05
