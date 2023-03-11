@@ -6,4 +6,5 @@ from .validators import *
 
 
 class Auditor(models.Model):
-    pass
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    on_audit = models.BooleanField(default=False, blank=False, null=False)
