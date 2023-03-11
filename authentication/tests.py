@@ -1,12 +1,19 @@
 from django.test import TestCase
 import unittest
 import requests
+from .models import *
 from .views import *
 
+
 # Create your tests here.
+class AuditorTest(unittest.TestCase):
+    def test_auditor_class_has_all_needed_attribute(self):
+        self.assertTrue(hasattr(Auditor(), 'user'))
+        self.assertTrue(hasattr(Auditor(), 'on_audit'))
 
 
 class LoginTest(unittest.TestCase):
+    # TODO make this test to execute only when test instance is running
     def test_success_login_can_access_views_with_authentication(self):
         # Gather token
         url = 'http://localhost:8000/authentication/token/'
