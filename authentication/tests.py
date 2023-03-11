@@ -17,10 +17,16 @@ class LoginTest(unittest.TestCase):
         # Check whether login is successful
         url = 'http://localhost:8000/authentication/hasloggedin/'
         r = requests.get(
-            url, header={"Authorization": f"Bearer {tokens['access']}"})
+            url, headers={"Authorization": f"Bearer {tokens['access']}"})
         status = r.json()
 
-        self.assertDictEqual(status, {{"Logged-In": 1}})
+        self.assertDictEqual(status, {"Logged-In": 1})
 
     def test_anonymous_user_cannot_accesss_views_with_authentication(self):
-        pass
+        # Check whether login is successful
+        url = 'http://localhost:8000/authentication/hasloggedin/'
+        r = requests.get(url)
+        status = r.json()
+
+        self.assertDictEqual(
+            status, {'detail': 'Authentication credentials were not provided.'})

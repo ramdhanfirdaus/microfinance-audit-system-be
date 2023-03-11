@@ -11,4 +11,4 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def check_has_logged_in(request):
-    return {"Logged-In": 1}
+    return JsonResponse({"Logged-In": 1})
