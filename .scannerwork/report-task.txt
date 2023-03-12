@@ -1,0 +1,6 @@
+projectKey=MicrofinanceAuditSystemBEStartAudit
+serverUrl=https://sonarqube.cs.ui.ac.id
+serverVersion=8.9.2.46101
+dashboardUrl=https://sonarqube.cs.ui.ac.id/dashboard?id=MicrofinanceAuditSystemBEStartAudit
+ceTaskId=AYbTa9ieoHIBEBqG9QGy
+ceTaskUrl=https://sonarqube.cs.ui.ac.id/api/ce/task?id=AYbTa9ieoHIBEBqG9QGy
