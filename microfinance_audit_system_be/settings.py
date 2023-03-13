@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'audit'
+    'audit',
     'rest_framework',
     'corsheaders',
 ]
@@ -83,6 +83,7 @@ DATABASES = {
            'NAME': 'masys',
            'CLIENT' : {
             'host' : 'mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true&w=majority',
+            'uuidRepresentation': 'standard',
             'USERNAME' : 'cugil',
             'PASSWORD' : 'agill'
            }
