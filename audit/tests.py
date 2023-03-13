@@ -3,7 +3,7 @@ import unittest
 from django.apps import apps
 
 from .apps import AuditConfig
-from .models import AuditCategory, AuditType
+from .models import AuditCategory, AuditType, AuditSession
 
 # Create your tests here.
 class AuditAppTestCase(unittest.TestCase):
@@ -40,3 +40,15 @@ class AuditTypeModelTestCase(unittest.TestCase):
     #def test_field_category(self):
     #    assert self.category[1] == self.obj.category[1]
     #    assert self.category[2] == self.obj.category[2]
+
+class AuditSessionModelTestCase(unittest.TestCase):
+    def setUp(self):
+        self.type_ = "General"
+        self.type = AuditType.objects.create(label = self.type_)
+        self.obj = AuditSession.objects.create(type = self.type)
+    
+    def test_create_audit_session(self):
+        assert isinstance(self.obj, AuditSession)
+    
+    def test_field_type(self):
+        assert self.type == self.obj.type
