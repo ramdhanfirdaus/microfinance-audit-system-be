@@ -17,4 +17,4 @@ def check_has_logged_in(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_logged_in_user_data(request):
-    pass
+    return JsonResponse({"username": request.user.username})
