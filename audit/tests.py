@@ -4,6 +4,7 @@ from django.apps import apps
 
 from .apps import AuditConfig
 from .models import AuditCategory, AuditType
+from .serializer import AuditCategorySerializer
 
 # Create your tests here.
 class AuditAppTestCase(unittest.TestCase):
@@ -38,3 +39,18 @@ class AuditTypeModelTestCase(unittest.TestCase):
     
     def test_field_type(self):
         assert self.label == self.obj.label
+
+class AuditCategorySerializerTestCase(unittest.TestCase):
+    def setUp(self):
+       self.title = "Some Audit Category"
+       self.typeobj = AuditType(label = "General")
+       self.obj = AuditCategory(title = self.title, audit_type = self.typeobj)
+
+    def test_audit_category_serializer(self):
+        serializer_data = AuditCategorySerializer(instance=self.obj).data
+        expected_data = {
+            'id': self.obj.id,
+            'title': 'Some Audit Category',
+            'audit_type': self.typeobj.id,
+        }
+        assert serializer_data == expected_data
