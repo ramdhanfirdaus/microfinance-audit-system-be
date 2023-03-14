@@ -3,13 +3,15 @@ import unittest
 import requests
 from .models import *
 from .views import *
-
+from audit import models as audit_models
+from django.contrib.auth.models import User
 
 # Create your tests here.
 class AuditorTest(unittest.TestCase):
     def test_auditor_class_has_all_needed_attribute(self):
         self.assertTrue(hasattr(Auditor(), 'user'))
         self.assertTrue(hasattr(Auditor(), 'on_audit'))
+        self.assertTrue(hasattr(Auditor(), 'session')) #R
 
 
 class LoginTest(unittest.TestCase):
