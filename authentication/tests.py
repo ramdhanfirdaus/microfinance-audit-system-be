@@ -1,8 +1,7 @@
 from django.test import TestCase
 import unittest
 import requests
-from .models import *
-from .views import *
+from .models import Auditor
 
 
 # Create your tests here.
@@ -14,25 +13,25 @@ class AuditorTest(unittest.TestCase):
 
 class LoginTest(unittest.TestCase):
     # TODO make this test to execute only when test instance is running
+    hasloggedin_url = 'http://localhost:8000/authentication/hasloggedin/'
+    login_url = 'http://localhost:8000/authentication/token/'
+
     def test_success_login_can_access_views_with_authentication(self):
         # Gather token
-        url = 'http://localhost:8000/authentication/token/'
         r = requests.post(
-            url, json={"username": "naruto", "password": "naruto"})
+            login_url, json={"username": "naruto", "password": "naruto"})
         tokens = r.json()
 
         # Check whether login is successful
-        url = 'http://localhost:8000/authentication/hasloggedin/'
         r = requests.get(
-            url, headers={"Authorization": f"Bearer {tokens['access']}"})
+            hasloggedin_url, headers={"Authorization": f"Bearer {tokens['access']}"})
         status = r.json()
 
         self.assertDictEqual(status, {"Logged-In": 1})
 
     def test_anonymous_user_cannot_accesss_views_with_authentication(self):
         # Check whether login is successful
-        url = 'http://localhost:8000/authentication/hasloggedin/'
-        r = requests.get(url)
+        r = requests.get(hasloggedin_url)
         status = r.json()
 
         self.assertDictEqual(
@@ -40,15 +39,13 @@ class LoginTest(unittest.TestCase):
 
     def test_logged_in_user_data_views_returns_user_data(self):
         # Gather token
-        url = 'http://localhost:8000/authentication/token/'
         r = requests.post(
-            url, json={"username": "naruto", "password": "naruto"})
+            login_url, json={"username": "naruto", "password": "naruto"})
         tokens = r.json()
 
         # Check whether login is successful
-        url = 'http://localhost:8000/authentication/hasloggedin/'
         r = requests.get(
-            url, headers={"Authorization": f"Bearer {tokens['access']}"})
+            hasloggedin_url + 'data', headers={"Authorization": f"Bearer {tokens['access']}"})
         data = r.json()
 
         self.assertDictEqual(data, {"username": "naruto"})
