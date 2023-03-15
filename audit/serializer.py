@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import *
+from .models import AuditCategory
 
 class AuditCategorySerializer(serializers.ModelSerializer):
     class Meta:
