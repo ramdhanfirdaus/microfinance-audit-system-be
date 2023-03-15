@@ -32,7 +32,11 @@ check-sonarqube:
     stage: sonarqube
     script:
         - echo "Starting sonarqube scanning..."
-        - sonar-scanner -Dsonar.projectKey=ppl-fasilkom-ui_2023_BB_microfinance-audit-system_microfinance-audit-system-be_AYadDgNeDKZBEovD9PlE -Dsonar.sources=.  -Dsonar.host.url=https://sonarqube.cs.ui.ac.id  -Dsonar.login=d4fda1e0ff8a7936f22471ea4d6e778451ade55d
+        - sonar-scanner \
+        - -Dsonar.projectKey=ppl-b10_microfinance-audit-system-be_AYbkNQGjoHIBEBqG9R1H \
+        - -Dsonar.sources=. \
+        - -Dsonar.host.url=https://sonarqube.cs.ui.ac.id \
+        - -Dsonar.login=d4fda1e0ff8a7936f22471ea4d6e778451ade55d
         - echo "Done scanning..."
 
 unit-test-job:   # This job runs in the test stage.
