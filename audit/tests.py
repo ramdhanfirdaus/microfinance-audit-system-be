@@ -1,6 +1,11 @@
 from django.test import TestCase
 import unittest
 from django.apps import apps
+import json
+from django.urls import reverse
+
+from rest_framework.test import APIClient
+from rest_framework import status
 
 from .apps import AuditConfig
 from .models import AuditCategory, AuditType
@@ -54,3 +59,20 @@ class AuditCategorySerializerTestCase(unittest.TestCase):
             'audit_type': self.typeobj.id,
         }
         assert serializer_data == expected_data
+
+class GetAuditCategoriesViewTestCase(unittest.TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.audit_type = AuditType.objects.create(label='Some Audit Type')
+        self.audit_category = AuditCategory.objects.create(title='Some Audit Category', audit_type=self.audit_type)
+    
+    def test_get_audit_categories_view(self):
+        response = self.client.get('/audit/audit-categories/'+str(self.audit_type.id))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        serializer_data = AuditCategorySerializer([self.audit_category], many=True).data
+        self.assertEqual(response.data, serializer_data)
+    
+    def test_get_audit_categories_view_with_invalid_audit_type(self):
+        response = self.client.get('/audit/audit-categories/1101')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
