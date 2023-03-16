@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'audit',
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
@@ -87,16 +88,17 @@ WSGI_APPLICATION = 'microfinance_audit_system_be.wsgi.application'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'djongo',
-        'NAME': 'masys',
-        'CLIENT': {
-            'host': 'mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true&w=majority',
-            'USERNAME': 'cugil',
-            'PASSWORD': 'agill'
-        }
-    }
-}
+       'default': {
+           'ENGINE': 'djongo',
+           'NAME': 'masys',
+           'CLIENT' : {
+            'host' : 'mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true&w=majority',
+            'uuidRepresentation': 'standard',
+            'USERNAME' : 'cugil',
+            'PASSWORD' : 'agill'
+           }
+       }
+   }
 
 # DATABASES = {
 #     'default': {
