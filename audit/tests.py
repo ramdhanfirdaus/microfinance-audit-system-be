@@ -51,4 +51,4 @@ class AuditSessionModelTestCase(unittest.TestCase):
         assert isinstance(self.obj, AuditSession)
     
     def test_field_type(self):
-        assert self.type == self.obj.type
+        assert self.type == self.obj.type 
