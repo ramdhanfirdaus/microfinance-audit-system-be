@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+import dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,7 +21,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
+# Load .env file
+# dotenv_file = os.path.join(BASE_DIR, ".env")
+# if os.path.isfile(dotenv_file):
+#     dotenv.load_dotenv(dotenv_file)
+
 # SECURITY WARNING: keep the secret key used in production secret!
+# SECRET_KEY = os.environ['SECRET_KEY']
 SECRET_KEY = 'django-insecure-_bpvjg9vj=t#qkvb4zctoz_zp@$s+q!$nu%9-_m$2lc(vke8$8'
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -81,16 +88,17 @@ WSGI_APPLICATION = 'microfinance_audit_system_be.wsgi.application'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'djongo',
-        'NAME': 'masys',
-        'CLIENT': {
-            'host': 'mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true&w=majority',
-            'USERNAME': 'cugil',
-            'PASSWORD': 'agill'
-        }
-    }
-}
+       'default': {
+           'ENGINE': 'djongo',
+           'NAME': 'masys',
+           'CLIENT' : {
+            'host' : 'mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true&w=majority',
+            'uuidRepresentation': 'standard',
+            'USERNAME' : 'cugil',
+            'PASSWORD' : 'agill'
+           }
+       }
+   }
 
 
 

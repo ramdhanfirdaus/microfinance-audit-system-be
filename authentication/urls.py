@@ -1,7 +1,7 @@
 from django.conf.urls import url
 from django.urls import path, include
 from .api import RegisterApi
-from .views import *
+from .views import check_has_logged_in, get_logged_in_user_data
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,

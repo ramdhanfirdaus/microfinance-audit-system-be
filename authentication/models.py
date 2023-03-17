@@ -1,13 +1,13 @@
 from django.db import models
 from django.contrib.auth.models import User
-from .validators import *
 
 from audit import models as audit_models #R
 
 # Create your models here.
 
 class Auditor(models.Model):
-    audit_user = models.OneToOneField(User, on_delete=models.CASCADE)
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     on_audit = models.BooleanField(default=False, blank=False, null=False)
     session = models.ForeignKey(
         audit_models.AuditSession,
