@@ -25,8 +25,8 @@ class AuditCategoryModelTestCase(unittest.TestCase):
 
         self.obj = AuditCategory(title = self.title, audit_type = self.typeobj)
 
-    #def test_create_audit_category(self):
-    #    assert isinstance(self.obj, AuditCategory)
+    def test_create_audit_category(self):
+        assert isinstance(self.obj, AuditCategory)
     
     def test_field_category(self):
         assert self.title == self.obj.title
@@ -44,10 +44,6 @@ class AuditTypeModelTestCase(unittest.TestCase):
     
     def test_field_type(self):
         assert self.label == self.obj.label
-
-    #def test_field_category(self):
-    #    assert self.category[1] == self.obj.category[1]
-    #    assert self.category[2] == self.obj.category[2]
 
 class AuditSessionModelTestCase(unittest.TestCase):
     def setUp(self):
