@@ -9,7 +9,7 @@ from rest_framework import status
 
 from .apps import AuditConfig
 from .models import AuditCategory, AuditType, AuditSession
-from .serializer import AuditCategorySerializer, AuditSessionSerializer
+from .serializer import AuditCategorySerializer, AuditSessionSerializer, AuditTypeSerializer
 
 # Create your tests here.
 class AuditAppTestCase(unittest.TestCase):
@@ -114,3 +114,16 @@ class CreateAuditSessionTestCase(unittest.TestCase):
         
         serializer_data = AuditSessionSerializer([self.obj]).data
         self.assertEqual(response.data, serializer_data)
+
+class AuditTypeSerializerTestCase(unittest.TestCase):
+    def setUp(self):
+       self.label = "Special"
+       self.obj = AuditType(label = self.label)
+
+    def test_audit_type_serializer(self):
+        fetched_data = AuditTypeSerializer(instance=self.obj).data
+        expected_data = {
+            'id': self.obj.id,
+            'label': self.label,
+        }
+        assert fetched_data == expected_data
