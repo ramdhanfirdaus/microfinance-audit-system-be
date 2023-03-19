@@ -9,7 +9,7 @@ from rest_framework import status
 
 from .apps import AuditConfig
 from .models import AuditCategory, AuditType, AuditSession
-from .serializer import AuditCategorySerializer
+from .serializer import AuditCategorySerializer, AuditSessionSerializer
 
 # Create your tests here.
 class AuditAppTestCase(unittest.TestCase):
@@ -88,3 +88,16 @@ class GetAuditCategoriesViewTestCase(unittest.TestCase):
     def test_get_audit_categories_view_with_invalid_audit_type(self):
         response = self.client.get('/audit/audit-categories/1101')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+class AuditSessionSerializerTestCase(unittest.TestCase):
+    def setUp(self):
+       self.type_obj = AuditType(label = "General")
+       self.obj = AuditSession(type = self.type_obj)
+
+    def test_audit_session_serializer(self):
+        fetched_data = AuditSessionSerializer(instance=self.obj).data
+        expected_data = {
+            'id': self.obj.id,
+            'type': self.type_obj.id,
+        }
+        assert fetched_data == expected_data
