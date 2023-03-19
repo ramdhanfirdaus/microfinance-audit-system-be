@@ -70,6 +70,8 @@ class GetAllAuditTypeViewTestCase(unittest.TestCase):
     def setUp(self):
         self.client = APIClient()
         
-    def test_get_all_audit_type_serializer(self):
+    def test_get_all_audit_type(self):
         response = self.client.get('/audit/get-all-audit-types/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
