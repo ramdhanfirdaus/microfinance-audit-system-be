@@ -101,3 +101,16 @@ class AuditSessionSerializerTestCase(unittest.TestCase):
             'type': self.type_obj.id,
         }
         assert fetched_data == expected_data
+
+class CreateAuditSessionTestCase(unittest.TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.type_obj = AuditType(label = "General")
+        self.obj = AuditSession(type = self.type_obj)
+    
+    def create_audit_session_view_test(self):
+        response = self.client.post('/create-session/'+str(self.type_obj.id))
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        
+        serializer_data = AuditSessionSerializer([self.obj]).data
+        self.assertEqual(response.data, serializer_data)
