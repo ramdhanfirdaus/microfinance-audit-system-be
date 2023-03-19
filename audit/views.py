@@ -13,3 +13,9 @@ from rest_framework.parsers import JSONParser
 from .models import AuditSession, AuditType
 from .serializer import AuditSessionSerializer, AuditTypeSerializer
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_all_audit_types(request):
+    types = AuditType.objects.all()
+    serializer = AuditTypeSerializer(types, many=True)
+    return JsonResponse(serializer.data, safe=False)
