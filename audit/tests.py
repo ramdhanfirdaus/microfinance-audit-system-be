@@ -74,4 +74,10 @@ class GetAllAuditTypeViewTestCase(unittest.TestCase):
         response = self.client.get('/audit/get-all-audit-types/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-
+class CreateNewAuditSessionViewTestCase(unittest.TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        
+    def test_create_new_audit_session(self):
+        response = self.client.get('/audit/create-new-audit-session/')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
