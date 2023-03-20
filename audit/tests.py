@@ -8,7 +8,7 @@ from rest_framework.test import APIClient
 from rest_framework import status
 
 from .apps import AuditConfig
-from .models import AuditCategory, AuditType
+from .models import AuditCategory, AuditType, AuditSession
 from .serializer import AuditCategorySerializer
 
 # Create your tests here.
@@ -45,6 +45,18 @@ class AuditTypeModelTestCase(unittest.TestCase):
     def test_field_type(self):
         assert self.label == self.obj.label
 
+class AuditSessionModelTestCase(unittest.TestCase):
+    def setUp(self):
+        self.type_ = "General"
+        self.type = AuditType.objects.create(label = self.type_)
+        self.obj = AuditSession.objects.create(type = self.type)
+    
+    def test_create_audit_session(self):
+        assert isinstance(self.obj, AuditSession)
+    
+    def test_field_type(self):
+        assert self.type == self.obj.type 
+        
 class AuditCategorySerializerTestCase(unittest.TestCase):
     def setUp(self):
        self.title = "Some Audit Category"

@@ -1,4 +1,4 @@
-projectKey=ppl-fasilkom-ui_2023_BB_microfinance-audit-system_microfinance-audit-system-be_AYadDgNeDKZBEovD9PlE
+projectKey=MicrofinanceAuditSystemBEStartAudit
 serverUrl=https://sonarqube.cs.ui.ac.id
 serverVersion=8.9.2.46101
 dashboardUrl=https://sonarqube.cs.ui.ac.id/dashboard?id=ppl-fasilkom-ui_2023_BB_microfinance-audit-system_microfinance-audit-system-be_AYadDgNeDKZBEovD9PlE

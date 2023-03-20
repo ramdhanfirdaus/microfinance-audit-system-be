@@ -9,9 +9,10 @@ class AuditorTest(unittest.TestCase):
     def test_auditor_class_has_all_needed_attribute(self):
         # self.assertTrue(hasattr(Auditor(), 'user'))
         self.assertTrue(hasattr(Auditor(), 'on_audit'))
-
+        self.assertTrue(hasattr(Auditor(), 'session')) #R
 
 class LoginTest(unittest.TestCase):
+    pass
     # TODO make this test to execute only when test instance is running
     hasloggedin_url = 'http://localhost:8000/authentication/hasloggedin/'
     login_url = 'http://localhost:8000/authentication/token/'
