@@ -8,31 +8,14 @@ from rest_framework.test import APIClient
 from rest_framework import status
 
 from .apps import AuditConfig
-from .models import AuditCategory, AuditType, AuditSession
-from .serializer import AuditCategorySerializer
+from .models import AuditType, AuditSession, AuditCategory
+from .serializer import AuditSessionSerializer, AuditTypeSerializer, AuditCategorySerializer
 
 # Create your tests here.
 class AuditAppTestCase(unittest.TestCase):
     def test_apps(self):
         self.assertEqual(AuditConfig.name, 'audit')
         self.assertEqual(apps.get_app_config('audit').name, 'audit')
-
-class AuditCategoryModelTestCase(unittest.TestCase):
-    def setUp(self):
-        self.title = "Kredit"
-
-        self.typeobj = AuditType(label = "General")
-
-        self.obj = AuditCategory(title = self.title, audit_type = self.typeobj)
-
-    def test_create_audit_category(self):
-        assert isinstance(self.obj, AuditCategory)
-    
-    def test_field_category(self):
-        assert self.title == self.obj.title
-
-    def test_field_audittype(self):
-        assert self.typeobj == self.obj.audit_type
 
 class AuditTypeModelTestCase(unittest.TestCase):
     def setUp(self):
@@ -57,6 +40,65 @@ class AuditSessionModelTestCase(unittest.TestCase):
     def test_field_type(self):
         assert self.type == self.obj.type 
         
+class AuditSessionSerializerTestCase(unittest.TestCase):
+    def setUp(self):
+       self.type_obj = AuditType(label = "General")
+       self.obj = AuditSession(type = self.type_obj)
+
+    def test_audit_session_serializer(self):
+        fetched_data = AuditSessionSerializer(instance=self.obj).data
+        expected_data = {
+            'id': self.obj.id,
+            'type': self.type_obj.id,
+        }
+        assert fetched_data == expected_data
+
+class AuditTypeSerializerTestCase(unittest.TestCase):
+    def setUp(self):
+       self.label = "Special"
+       self.obj = AuditType(label = self.label)
+
+    def test_audit_type_serializer(self):
+        fetched_data = AuditTypeSerializer(instance=self.obj).data
+        expected_data = {
+            'id': self.obj.id,
+            'label': self.label,
+        }
+        assert fetched_data == expected_data
+
+class GetAllAuditTypeViewTestCase(unittest.TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        
+    def test_get_all_audit_type(self):
+        response = self.client.get('/audit/get-all-audit-types/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+class CreateNewAuditSessionViewTestCase(unittest.TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        
+    def test_create_new_audit_session(self):
+        response = self.client.get('/audit/create-new-audit-session/')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+class AuditCategoryModelTestCase(unittest.TestCase):
+    def setUp(self):
+        self.title = "Kredit"
+
+        self.typeobj = AuditType(label = "General")
+
+        self.obj = AuditCategory(title = self.title, audit_type = self.typeobj)
+
+    def test_create_audit_category(self):
+        assert isinstance(self.obj, AuditCategory)
+    
+    def test_field_category(self):
+        assert self.title == self.obj.title
+
+    def test_field_audittype(self):
+        assert self.typeobj == self.obj.audit_type
+
 class AuditCategorySerializerTestCase(unittest.TestCase):
     def setUp(self):
        self.title = "Some Audit Category"
