@@ -1,4 +1,4 @@
-from django.test import TestCase
+from django.test import TestCase, override_settings
 import unittest
 from django.apps import apps
 import json
@@ -6,6 +6,12 @@ from django.urls import reverse
 
 from rest_framework.test import APIClient
 from rest_framework import status
+
+import os
+import tempfile
+import zipfile
+
+from pymongo import MongoClient
 
 from .apps import AuditConfig
 from .models import AuditCategory, AuditType, AuditSession
@@ -88,3 +94,35 @@ class GetAuditCategoriesViewTestCase(unittest.TestCase):
     def test_get_audit_categories_view_with_invalid_audit_type(self):
         response = self.client.get('/audit/audit-categories/1101')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+class PostAuditDataViewTestCase(unittest.TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.temp_file = tempfile.NamedTemporaryFile(delete=False)
+
+    def tearDown(self):
+        os.unlink(self.temp_file.name)
+
+    @override_settings(MEDIA_ROOT=tempfile.gettempdir())
+    def test_post_audit_data(self):
+        # Create a zip file with some test data
+        with zipfile.ZipFile(self.temp_file.name, 'w') as zip_ref:
+            zip_ref.writestr('file1.txt', 'hello')
+            zip_ref.writestr('file2.txt', 'world')
+
+        with open(self.temp_file.name, 'rb') as f:
+            response = self.client.post('/audit/upload-data', {'file': f}, format='multipart')
+
+        # Check that the response has a 200 OK status code
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Check that the files were saved to the child collection
+        client = MongoClient('mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true')
+        db = client['masys']
+        collection = db['audit_data']
+        data_count = collection.count_documents({})
+        
+        data_name = 'audit-data-' + str(data_count)
+        child_collection = collection[data_name]
+        self.assertEqual(child_collection.count_documents({}), 2)
+
