@@ -9,6 +9,12 @@ from pymongo import MongoClient
 
 import unittest, json, requests, os, tempfile, zipfile
 
+import os
+import tempfile
+import zipfile
+
+from pymongo import MongoClient
+
 from .apps import AuditConfig
 from .models import AuditType, AuditSession, AuditCategory
 from .serializer import AuditTypeSerializer, AuditSessionSerializer, AuditCategorySerializer
