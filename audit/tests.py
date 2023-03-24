@@ -78,7 +78,11 @@ class GetAllAuditTypeViewTestCase(unittest.TestCase):
         tokens = r.json()
         response = requests.get(
             self.getaudittypes_url, headers={"Authorization": f"Bearer {tokens['access']}"})
+        data = response.json()
+        audit_types = AuditType.objects.all()
+        serializer = AuditTypeSerializer(audit_types, many=True)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(data, serializer.data)
 
 class CreateNewAuditSessionViewTestCase(unittest.TestCase):
 
