@@ -1,11 +1,13 @@
-from django.test import TestCase, override_settings
-import unittest
-from django.apps import apps
-import json
-from django.urls import reverse
-
 from rest_framework.test import APIClient
 from rest_framework import status
+
+from django.test import TestCase, override_settings
+from django.apps import apps
+from django.urls import reverse
+
+from pymongo import MongoClient
+
+import unittest, json, requests, os, tempfile, zipfile
 
 import os
 import tempfile
@@ -15,9 +17,8 @@ from pymongo import MongoClient
 
 from .apps import AuditConfig
 from .models import AuditType, AuditSession, AuditCategory
-from .serializer import AuditSessionSerializer, AuditTypeSerializer, AuditCategorySerializer
+from .serializer import AuditTypeSerializer, AuditSessionSerializer, AuditCategorySerializer
 
-# Create your tests here.
 class AuditAppTestCase(unittest.TestCase):
     def test_apps(self):
         self.assertEqual(AuditConfig.name, 'audit')
@@ -73,20 +74,40 @@ class AuditTypeSerializerTestCase(unittest.TestCase):
         assert fetched_data == expected_data
 
 class GetAllAuditTypeViewTestCase(unittest.TestCase):
+
+    login_url = 'http://localhost:8000/authentication/token/'
+    getaudittypes_url = 'http://localhost:8000/audit/get-all-audit-types/'
+
     def setUp(self):
         self.client = APIClient()
         
     def test_get_all_audit_type(self):
-        response = self.client.get('/audit/get-all-audit-types/')
+        r = requests.post(self.login_url, json={"username": "naruto", "password": "naruto"})
+        tokens = r.json()
+        response = requests.get(
+            self.getaudittypes_url, headers={"Authorization": f"Bearer {tokens['access']}"})
+        data = response.json()
+        audit_types = AuditType.objects.all()
+        serializer = AuditTypeSerializer(audit_types, many=True)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(data, serializer.data)
 
 class CreateNewAuditSessionViewTestCase(unittest.TestCase):
+
+    login_url = 'http://localhost:8000/authentication/token/'
+    createauditsession_url = 'http://localhost:8000/audit/create-new-audit-session/'
+
     def setUp(self):
         self.client = APIClient()
+        self.audit_type = AuditType.objects.create(label="General")
         
     def test_create_new_audit_session(self):
-        response = self.client.get('/audit/create-new-audit-session/')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        type_id = str(self.audit_type.id)
+        r = requests.post(self.login_url, json={"username": "naruto", "password": "naruto"})
+        tokens = r.json()
+        response = requests.put(
+            self.createauditsession_url + type_id, headers={"Authorization": f"Bearer {tokens['access']}"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 class AuditCategoryModelTestCase(unittest.TestCase):
     def setUp(self):
@@ -167,4 +188,3 @@ class PostAuditDataViewTestCase(unittest.TestCase):
         data_name = 'audit-data-' + str(data_count)
         child_collection = collection[data_name]
         self.assertEqual(child_collection.count_documents({}), 2)
-
