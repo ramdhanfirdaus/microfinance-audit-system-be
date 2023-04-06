@@ -1,6 +1,7 @@
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 
 from django.views.decorators.http import require_POST
 from pymongo import MongoClient
@@ -10,6 +11,7 @@ from audit.views import extract_data
 
 @require_POST
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def post_audit_question_session(request):
     id_audit = request.POST.get('id_audit')
     zip_attachment = request.FILES.get('attachment')
