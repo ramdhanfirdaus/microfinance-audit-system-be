@@ -1,6 +1,6 @@
 from pymongo import MongoClient
-import tempfile, zipfile, configparser, requests
-
+import tempfile, zipfile, configparser
+from rest_framework.test import APIClient
 
 def cek_mongodb(name_collection, id):
     # Check that the files were saved to the child collection
@@ -36,12 +36,10 @@ def delete_audit_question_session(name_collection, id):
 
 
 def login_test():
-    login_url = 'http://localhost:8000/authentication/token/'
-
     config = configparser.ConfigParser()
     config.read('test_config.ini')
     username = config.get('credentials', 'test-username')
     password = config.get('credentials', 'test-password')
 
-    r = requests.post(login_url, json={"username": username, "password": password})
+    r = APIClient().post('/authentication/token/', data={"username": username, "password": password})
     return r.json()
