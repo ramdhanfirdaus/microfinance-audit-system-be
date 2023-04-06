@@ -16,13 +16,22 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.parsers import JSONParser
 
 from .models import AuditSession, AuditType, AuditCategory
+from authentication.models import Auditor
 from .serializer import AuditSessionSerializer, AuditTypeSerializer, AuditCategorySerializer
+from authentication.serializer import AuditorSerializer
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_all_audit_types(request):
     types = AuditType.objects.all()
     serializer = AuditTypeSerializer(types, many=True)
+    return JsonResponse(serializer.data, safe=False)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_all_auditors(request):
+    auditors = Auditor.objects.all()
+    serializer = AuditorSerializer(auditors, many=True)
     return JsonResponse(serializer.data, safe=False)
 
 @api_view(['POST'])
