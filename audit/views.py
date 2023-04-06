@@ -1,28 +1,24 @@
-from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from pymongo import MongoClient
 
 import zipfile
 
-from pymongo import MongoClient
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
-
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework.parsers import JSONParser
 
-from .models import AuditSession, AuditType, AuditCategory
+from .models import AuditType, AuditCategory, AuditSession
 from authentication.models import Auditor
-from .serializer import AuditSessionSerializer, AuditTypeSerializer, AuditCategorySerializer
+from .serializer import  AuditTypeSerializer, AuditCategorySerializer, AuditSessionSerializer
 from authentication.serializer import AuditorSerializer
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def get_all_audit_types(request):
+def get_all_audit_types(request): #return all audit types
     types = AuditType.objects.all()
     serializer = AuditTypeSerializer(types, many=True)
     return JsonResponse(serializer.data, safe=False)
@@ -34,12 +30,13 @@ def get_all_auditors(request):
     serializer = AuditorSerializer(auditors, many=True)
     return JsonResponse(serializer.data, safe=False)
 
-@api_view(['POST'])
+@api_view(['PUT'])
 @permission_classes([IsAuthenticated])
-def create_new_audit_session(request, id):
-    types = AuditType.objects.get(id = int(id))
-    serializer = AuditSessionSerializer(type=types)
-    return JsonResponse(serializer.data, status=201)
+def create_new_audit_session(request, id): #create a new audit session with spesific audit type 
+    AuditSession.objects.update_or_create(
+        type = AuditType.objects.get(id = int(id))
+    )
+    return HttpResponse(200)
 
 @api_view(['GET'])
 def get_audit_categories(request, id):
