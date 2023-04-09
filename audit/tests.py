@@ -8,13 +8,13 @@ from pymongo import MongoClient
 from openpyxl import Workbook
 from requests_toolbelt.multipart.encoder import MultipartEncoder
 
-import unittest, json, requests, os, tempfile, zipfile, io
+import unittest, json, requests, os, tempfile, zipfile, io, pytest
 
 from .apps import AuditConfig
 from .models import AuditType, AuditSession, AuditCategory
 from .serializer import AuditTypeSerializer, AuditSessionSerializer, AuditCategorySerializer
-from .views_questions import save_attachment, save_comment_remark
-from .test_utils import cek_mongodb, create_test_zip, delete_audit_question_session, login_test
+from .views_questions import save_attachment, save_comment_remark, query_sample
+from .test_utils import cek_mongodb, create_test_zip, delete_audit_question_session, login_test, test_post_audit_data
 
 
 class AuditAppTestCase(unittest.TestCase):
@@ -214,6 +214,48 @@ class PostAuditDataViewTestCase(unittest.TestCase):
         # Reset test data on database
         child_collection.delete_many({})
 
+class QueryQuestionTestCase(unittest.TestCase):
+    def setUp(self):
+        self.client = APIClient()
+
+        client = MongoClient('mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true')
+        db = client['masys']
+        collection = db['audit_data']
+        collection.insert_one({'name': 'audit-data-123'})
+
+        test_post_audit_data(self.client)
+
+    def tearDown(self):
+        delete_audit_question_session('audit_data', 'audit-data', '123')
+
+    def test_query_sample_with_valid_input(self):
+        id_session = "123"
+        query = {'Name': 'Alice'}
+        sort = [("Age", 1)]
+        limit = 0
+
+        result = query_sample(id_session, query, sort, limit)
+        result_list = json.loads(result)
+
+        self.assertEqual(result_list[0]["Name"], 'Alice')
+
+    def test_query_sample_with_invalid_session_id(self):
+        id_session = "456"
+        query = {'Name': 'John'}
+        sort = [("Age", 1)]
+        limit = 0
+        with pytest.raises(Exception):
+            query_sample(id_session, query, sort, limit)
+
+    def test_query_sample_with_empty_session_id(self):
+        id_session = None
+        query = {'Name': 'John'}
+        sort = [("Age", 1)]
+        limit = 0
+        with pytest.raises(Exception):
+            query_sample(id_session, query, sort, limit)
+
+
 class PostAuditQuestionSessionTestCase(unittest.TestCase):
     def setUp(self):
         self.client = APIClient()
@@ -221,7 +263,7 @@ class PostAuditQuestionSessionTestCase(unittest.TestCase):
 
     def tearDown(self):
         self.temp_file.close()
-        delete_audit_question_session('attachment', 'test')
+        delete_audit_question_session('attachment', 'attachment', 'test')
 
     def post_audit_question_session(self, token):
         with open(self.temp_file.name, 'rb') as f:
