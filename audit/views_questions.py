@@ -5,7 +5,25 @@ from rest_framework.permissions import IsAuthenticated
 
 from django.views.decorators.http import require_POST
 from pymongo import MongoClient
+import json
+
 from audit.views import extract_zip
+
+
+def query_sample(id_session, query, sort, limit):
+    client = MongoClient('mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true')
+    db = client['masys']
+    collection = db['audit_data']
+    data_name = 'audit-data-' + str(id_session)
+
+    data_count = collection.count_documents({'name': data_name})
+
+    if data_count != 0:
+        child_collection = collection[data_name]
+        data = list(child_collection.find(query, {"_id": 0}).sort(sort).limit(limit))
+        return json.dumps(data)
+    else:
+        raise Exception()
 
 
 @require_POST
