@@ -2,7 +2,6 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.parsers import JSONParser
 
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.http import HttpResponse, JsonResponse
@@ -17,12 +16,23 @@ import re
 
 from .models import AuditType, AuditSession, AuditCategory
 from .serializer import  AuditTypeSerializer, AuditSessionSerializer, AuditCategorySerializer
+from .models import AuditType, AuditCategory, AuditSession
+from authentication.models import Auditor
+from .serializer import  AuditTypeSerializer, AuditCategorySerializer, AuditSessionSerializer
+from authentication.serializer import AuditorSerializer
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_all_audit_types(request): #return all audit types
     types = AuditType.objects.all()
     serializer = AuditTypeSerializer(types, many=True)
+    return JsonResponse(serializer.data, safe=False)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_all_auditors(request):
+    auditors = Auditor.objects.all()
+    serializer = AuditorSerializer(auditors, many=True)
     return JsonResponse(serializer.data, safe=False)
 
 @api_view(['PUT'])
