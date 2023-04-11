@@ -70,7 +70,9 @@ def post_audit_data(request):
         
     return Response(data={'message':"File uploaded to database", 'data': data_name}, status=status.HTTP_200_OK)
 
-    
+@api_view(['GET'])
+def get_audit_question(request, id):
+    pass
 
 def extract_data(zip_file):
     result_data = dict()
