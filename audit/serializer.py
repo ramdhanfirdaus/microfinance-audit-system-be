@@ -17,5 +17,7 @@ class AuditCategorySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class AuditQuestionSerializer(serializers.ModelSerializer):
-    pass
+    class Meta:
+        model = AuditQuestion
+        fields = ['id', 'title']
         

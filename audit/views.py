@@ -12,8 +12,8 @@ from pymongo import MongoClient
 
 import zipfile
 
-from .models import AuditType, AuditSession, AuditCategory
-from .serializer import  AuditTypeSerializer, AuditSessionSerializer, AuditCategorySerializer
+from .models import AuditQuestion, AuditType, AuditSession, AuditCategory
+from .serializer import  AuditQuestionSerializer, AuditTypeSerializer, AuditSessionSerializer, AuditCategorySerializer
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -72,7 +72,17 @@ def post_audit_data(request):
 
 @api_view(['GET'])
 def get_audit_question(request, id):
-    pass
+    try :
+        audit_questions = AuditQuestion.objects.filter(audit_category = int(id))
+
+        if len(audit_questions) == 0 :
+            raise ObjectDoesNotExist
+        
+    except ObjectDoesNotExist :
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    
+    serializer = AuditQuestionSerializer(audit_questions, many=True)
+    return Response(serializer.data)
 
 def extract_data(zip_file):
     result_data = dict()
