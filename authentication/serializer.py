@@ -5,8 +5,6 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
 
-from .models import Auditor
-
 # Register serializer
 
 
@@ -29,11 +27,4 @@ class RegisterSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'first_name', 'last_name')
-
-class AuditorSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
-    class Meta:
-        model = Auditor
         fields = '__all__'
-        depth = 1

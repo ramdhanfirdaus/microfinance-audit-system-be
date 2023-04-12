@@ -1,20 +1,20 @@
 from rest_framework.test import APIClient
 from rest_framework import status
 
-from django.test import TestCase, override_settings
+from django.test import override_settings
 from django.apps import apps
 
 from pymongo import MongoClient
 
 from requests_toolbelt.multipart.encoder import MultipartEncoder
 
-import unittest, requests, os, tempfile, zipfile, io
+import unittest, os, tempfile, zipfile
 
 from openpyxl import Workbook
 
 from .apps import AuditConfig
-from .models import AuditType, AuditSession, AuditCategory
-from .serializer import AuditTypeSerializer, AuditSessionSerializer, AuditCategorySerializer
+from .models import AuditQuestion, AuditType, AuditSession, AuditCategory
+from .serializer import AuditQuestionSerializer, AuditTypeSerializer, AuditSessionSerializer, AuditCategorySerializer
 from .views_questions import save_attachment, save_comment_remark
 from .test_utils import cek_mongodb, create_test_zip, delete_audit_question_session, login_test
 
@@ -297,3 +297,29 @@ class SaveCommentRemarkTestCase(unittest.TestCase):
         self.assertIn('remark', data.keys())
         self.assertEqual(data['comment'], comment)
         self.assertEqual(data['remark'], remark)
+
+
+class GetAuditQuestionsViewTestCase(unittest.TestCase):
+    def setUp(self):
+        self.audit_type = AuditType.objects.create(label='Some Audit Type')
+        self.audit_category = AuditCategory.objects.create(title='Some Audit Category', audit_type=self.audit_type)
+        self.audit_question = AuditQuestion.objects.create(title='Some Audit Question', audit_category=self.audit_category)
+
+        self.client = APIClient()
+        self.login_url = '/authentication/token/'
+        self.auth_response = self.client.post(self.login_url, {"username": "naruto", "password": "naruto"})
+        self.tokens = self.auth_response.json()
+
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.tokens['access']}")
+
+
+    def test_get_audit_questions_view(self):
+        response = self.client.get('/audit/audit-questions/'+str(self.audit_category.id))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        serializer_data = AuditQuestionSerializer([self.audit_question], many=True).data
+        self.assertEqual(response.data, serializer_data)
+
+    def test_get_audit_questions_view_with_invalid_audit_category(self):
+        response = self.client.get('/audit/audit-questions/123456789')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
