@@ -1,19 +1,18 @@
 from rest_framework.test import APIClient
 from rest_framework import status
 
-from django.test import TestCase, override_settings
+from django.test import override_settings
 from django.apps import apps
-from django.urls import reverse
 
 from pymongo import MongoClient
+from openpyxl import Workbook
 
-import unittest, json, requests, os, tempfile, zipfile
+import unittest, os, tempfile, zipfile
 
 import os
 import tempfile
 import zipfile
-
-from pymongo import MongoClient
+import io
 
 from .apps import AuditConfig
 from .models import AuditQuestion, AuditType, AuditSession, AuditCategory
@@ -74,39 +73,34 @@ class AuditTypeSerializerTestCase(unittest.TestCase):
         assert fetched_data == expected_data
 
 class GetAllAuditTypeViewTestCase(unittest.TestCase):
-
-    login_url = 'http://localhost:8000/authentication/token/'
-    getaudittypes_url = 'http://localhost:8000/audit/get-all-audit-types/'
-
     def setUp(self):
         self.client = APIClient()
+        self.login_url = '/authentication/token/'
+        self.auth_response = self.client.post(self.login_url, {"username": "naruto", "password": "naruto"})
+        self.tokens = self.auth_response.json()
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.tokens['access']}")
         
     def test_get_all_audit_type(self):
-        r = requests.post(self.login_url, json={"username": "naruto", "password": "naruto"})
-        tokens = r.json()
-        response = requests.get(
-            self.getaudittypes_url, headers={"Authorization": f"Bearer {tokens['access']}"})
+        response = self.client.get('/audit/get-all-audit-types/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
         audit_types = AuditType.objects.all()
         serializer = AuditTypeSerializer(audit_types, many=True)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(data, serializer.data)
 
 class CreateNewAuditSessionViewTestCase(unittest.TestCase):
 
-    login_url = 'http://localhost:8000/authentication/token/'
-    createauditsession_url = 'http://localhost:8000/audit/create-new-audit-session/'
-
     def setUp(self):
         self.client = APIClient()
+        self.login_url = '/authentication/token/'
+        self.auth_response = self.client.post(self.login_url, {"username": "naruto", "password": "naruto"})
+        self.tokens = self.auth_response.json()
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.tokens['access']}")
         self.audit_type = AuditType.objects.create(label="General")
         
     def test_create_new_audit_session(self):
         type_id = str(self.audit_type.id)
-        r = requests.post(self.login_url, json={"username": "naruto", "password": "naruto"})
-        tokens = r.json()
-        response = requests.put(
-            self.createauditsession_url + type_id, headers={"Authorization": f"Bearer {tokens['access']}"})
+        response = self.client.put('/audit/create-new-audit-session/'+type_id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 class AuditCategoryModelTestCase(unittest.TestCase):
@@ -144,6 +138,14 @@ class AuditCategorySerializerTestCase(unittest.TestCase):
 class GetAuditCategoriesViewTestCase(unittest.TestCase):
     def setUp(self):
         self.client = APIClient()
+
+        self.login_url = '/authentication/token/'
+        self.auth_response = self.client.post(self.login_url, {"username": "naruto", "password": "naruto"})
+        self.tokens = self.auth_response.json()
+
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.tokens['access']}")
+
+        
         self.audit_type = AuditType.objects.create(label='Some Audit Type')
         self.audit_category = AuditCategory.objects.create(title='Some Audit Category', audit_type=self.audit_type)
     
@@ -161,6 +163,17 @@ class GetAuditCategoriesViewTestCase(unittest.TestCase):
 class PostAuditDataViewTestCase(unittest.TestCase):
     def setUp(self):
         self.client = APIClient()
+        
+        self.login_url = '/authentication/token/'
+        self.auth_response = self.client.post(self.login_url, {"username": "naruto", "password": "naruto"})
+        self.tokens = self.auth_response.json()
+
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.tokens['access']}")
+
+        self.db_client = MongoClient('mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true')
+        self.db = self.db_client['masys']
+        self.collection = self.db['audit_data']
+
         self.temp_file = tempfile.NamedTemporaryFile(delete=False)
 
     def tearDown(self):
@@ -169,25 +182,33 @@ class PostAuditDataViewTestCase(unittest.TestCase):
     @override_settings(MEDIA_ROOT=tempfile.gettempdir())
     def test_post_audit_data(self):
         # Create a zip file with some test data
-        with zipfile.ZipFile(self.temp_file.name, 'w') as zip_ref:
-            zip_ref.writestr('file1.txt', 'hello')
-            zip_ref.writestr('file2.txt', 'world')
+        workbook = Workbook()
+        worksheet = workbook.create_sheet("Sheet1")
+        worksheet.append(['Name', 'Age'])
+        worksheet.append(['Alice', 25])
+        worksheet.append(['Bob', 30])
+        file_data = io.BytesIO()
+        workbook.save(file_data)
+        file_data.seek(0)
+        zip_data = io.BytesIO()
+        with zipfile.ZipFile(zip_data, 'w') as zip_file:
+            zip_file.writestr('example.xlsx', file_data.getvalue())
+        zip_data.seek(0)
 
-        with open(self.temp_file.name, 'rb') as f:
-            response = self.client.post('/audit/upload-data', {'file': f}, format='multipart')
+        response = self.client.post('/audit/upload-data', 
+                                    {'file': zip_data, 'audit_session_id' : 1001}, format='multipart')
 
-        # Check that the response has a 200 OK status code
+        # Check the response has a success status code and the expected message and data
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {'message': 'File uploaded to database', 'data': 'audit-data-1001'})
 
         # Check that the files were saved to the child collection
-        client = MongoClient('mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true')
-        db = client['masys']
-        collection = db['audit_data']
-        data_count = collection.count_documents({})
-        
-        data_name = 'audit-data-' + str(data_count)
-        child_collection = collection[data_name]
+        data_name = 'audit-data-1001'
+        child_collection = self.collection[data_name]
         self.assertEqual(child_collection.count_documents({}), 2)
+
+        # Reset test data on database
+        child_collection.delete_many({})
 
 class GetAuditQuestionsViewTestCase(unittest.TestCase):
     def setUp(self):

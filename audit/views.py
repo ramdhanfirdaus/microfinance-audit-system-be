@@ -2,24 +2,37 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.parsers import JSONParser
 
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
 from pymongo import MongoClient
+from io import BytesIO
 
 import zipfile
+import openpyxl
+import re
 
 from .models import AuditQuestion, AuditType, AuditSession, AuditCategory
 from .serializer import  AuditQuestionSerializer, AuditTypeSerializer, AuditSessionSerializer, AuditCategorySerializer
+from .models import AuditType, AuditCategory, AuditSession
+from authentication.models import Auditor
+from .serializer import  AuditTypeSerializer, AuditCategorySerializer, AuditSessionSerializer
+from authentication.serializer import AuditorSerializer
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_all_audit_types(request): #return all audit types
     types = AuditType.objects.all()
     serializer = AuditTypeSerializer(types, many=True)
+    return JsonResponse(serializer.data, safe=False)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_all_auditors(request):
+    auditors = Auditor.objects.all()
+    serializer = AuditorSerializer(auditors, many=True)
     return JsonResponse(serializer.data, safe=False)
 
 @api_view(['PUT'])
@@ -49,24 +62,21 @@ def get_audit_categories(request, id):
 @api_view(['POST'])
 def post_audit_data(request):
     zip_file = request.FILES.get('file')
+    audit_session_id = request.data.get('audit_session_id')
+    print(audit_session_id)
 
-    extracted_data = extract_data(zip_file)
+    files = extract_zip(zip_file)
 
-    if(len(extracted_data) == 0) :
+    if(len(files) == 0) :
         raise ValidationError
     
-    client = MongoClient('mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true')
-    db = client['masys']
-    collection = db['audit_data']
-    data_count = collection.count_documents({})
+    data_name = 'audit-data-'+str(audit_session_id)
+    child_collection = get_collection(data_name)
 
-    data_name = 'audit-data-'+str(data_count+1)
+    list_data = extract_files(files)
 
-    collection.insert_one({'name': data_name})
-    child_collection = collection[data_name]
-
-    for filename, file_data in extracted_data.items():
-        child_collection.insert_one({'filename': filename, 'file_data': file_data})
+    for data in list_data:
+        child_collection.insert_one(data)
         
     return Response(data={'message':"File uploaded to database", 'data': data_name}, status=status.HTTP_200_OK)
 
@@ -84,7 +94,7 @@ def get_audit_question(request, id):
     serializer = AuditQuestionSerializer(audit_questions, many=True)
     return Response(serializer.data)
 
-def extract_data(zip_file):
+def extract_zip(zip_file):
     result_data = dict()
     with zipfile.ZipFile(zip_file, 'r') as zip_ref:
         for filename in zip_ref.namelist():
@@ -92,3 +102,40 @@ def extract_data(zip_file):
             result_data[filename] = file_data
 
     return result_data
+
+def extract_files(files):
+    pattern = r'^\w+\.xlsx$'
+    data = []
+
+    for filename, file_data in files.items():
+        if not re.match(pattern, filename) :
+            continue
+
+        file_obj = BytesIO(file_data)
+        workbook = openpyxl.load_workbook(file_obj)
+        worksheet = workbook['Sheet1']
+
+        column_headers = []
+        for cell in worksheet[1]:
+            column_headers.append(cell.value)
+
+        for row in worksheet.iter_rows(min_row=2, values_only=True):
+            row_data = {}
+            for column, value in zip(column_headers, row):
+                row_data[column] = value
+            
+            row_data['filename'] = filename
+            data.append(row_data)
+
+    return data
+
+
+def get_collection(data_name):
+    client = MongoClient('mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true')
+    db = client['masys']
+    collection = db['audit_data']
+
+    if collection[data_name] is None:
+        collection.insert_one({'name': data_name})
+
+    return collection[data_name]
