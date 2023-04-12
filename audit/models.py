@@ -8,7 +8,7 @@ class AuditType(models.Model):
 
 class AuditSession(models.Model):
     id = models.AutoField(primary_key=True)
-    type = models.OneToOneField(
+    type = models.ForeignKey(
         AuditType,
         on_delete=models.CASCADE,
     )
