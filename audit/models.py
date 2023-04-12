@@ -17,3 +17,8 @@ class AuditCategory(models.Model):
     id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=15)
     audit_type = models.ForeignKey(AuditType, on_delete=models.CASCADE)
+
+class AuditQuestion(models.Model):
+    id = models.AutoField(primary_key=True)
+    title = models.CharField(max_length=20)
+    audit_category = models.ForeignKey(AuditCategory, on_delete=models.CASCADE)

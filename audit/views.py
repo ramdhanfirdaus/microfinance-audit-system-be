@@ -14,8 +14,8 @@ import zipfile
 import openpyxl
 import re
 
-from .models import AuditType, AuditSession, AuditCategory
-from .serializer import  AuditTypeSerializer, AuditSessionSerializer, AuditCategorySerializer
+from .models import AuditQuestion, AuditType, AuditSession, AuditCategory
+from .serializer import  AuditQuestionSerializer, AuditTypeSerializer, AuditSessionSerializer, AuditCategorySerializer
 from .models import AuditType, AuditCategory, AuditSession
 from authentication.models import Auditor
 from .serializer import  AuditTypeSerializer, AuditCategorySerializer, AuditSessionSerializer
@@ -80,6 +80,19 @@ def post_audit_data(request):
         
     return Response(data={'message':"File uploaded to database", 'data': data_name}, status=status.HTTP_200_OK)
 
+@api_view(['GET'])
+def get_audit_question(request, id):
+    try :
+        audit_questions = AuditQuestion.objects.filter(audit_category = int(id))
+
+        if len(audit_questions) == 0 :
+            raise ObjectDoesNotExist
+        
+    except ObjectDoesNotExist :
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    
+    serializer = AuditQuestionSerializer(audit_questions, many=True)
+    return Response(serializer.data)
 
 def extract_zip(zip_file):
     result_data = dict()
