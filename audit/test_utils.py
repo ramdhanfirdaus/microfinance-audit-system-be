@@ -1,6 +1,8 @@
 from pymongo import MongoClient
 import tempfile, zipfile, configparser
 from rest_framework.test import APIClient
+from openpyxl import Workbook
+import io
 
 def cek_mongodb(name_collection, id):
     # Check that the files were saved to the child collection
@@ -43,3 +45,24 @@ def login_test():
 
     r = APIClient().post('/authentication/token/', data={"username": username, "password": password})
     return r.json()
+
+def test_post_audit_data(client):
+    workbook = Workbook()
+    worksheet = workbook.create_sheet("Sheet1")
+    worksheet.append(['Name', 'Age'])
+    worksheet.append(['Alice', 25])
+    worksheet.append(['Bob', 30])
+    file_data = io.BytesIO()
+    workbook.save(file_data)
+    file_data.seek(0)
+    zip_data = io.BytesIO()
+    with zipfile.ZipFile(zip_data, 'w') as zip_file:
+        zip_file.writestr('example.xlsx', file_data.getvalue())
+    zip_data.seek(0)
+
+    tokens = login_test()
+
+    client.credentials(HTTP_AUTHORIZATION=f"Bearer {tokens['access']}")
+
+    client.post('/audit/upload-data',
+                                {'file': zip_data, 'audit_session_id' : "123"}, format='multipart')

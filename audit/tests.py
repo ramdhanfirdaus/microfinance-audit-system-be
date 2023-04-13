@@ -8,15 +8,15 @@ from pymongo import MongoClient
 
 from requests_toolbelt.multipart.encoder import MultipartEncoder
 
-import unittest, os, tempfile, zipfile
+import unittest, os, tempfile, zipfile, io, pytest, json
 
 from openpyxl import Workbook
 
 from .apps import AuditConfig
 from .models import AuditQuestion, AuditType, AuditSession, AuditCategory
 from .serializer import AuditQuestionSerializer, AuditTypeSerializer, AuditSessionSerializer, AuditCategorySerializer
-from .views_questions import save_attachment, save_comment_remark
-from .test_utils import cek_mongodb, create_test_zip, delete_audit_question_session, login_test
+from .views_questions import save_attachment, save_comment_remark, query_sample
+from .test_utils import cek_mongodb, create_test_zip, delete_audit_question_session, login_test, test_post_audit_data
 
 
 class AuditAppTestCase(unittest.TestCase):
@@ -24,33 +24,36 @@ class AuditAppTestCase(unittest.TestCase):
         self.assertEqual(AuditConfig.name, 'audit')
         self.assertEqual(apps.get_app_config('audit').name, 'audit')
 
+
 class AuditTypeModelTestCase(unittest.TestCase):
     def setUp(self):
         self.label = "General"
-        self.obj = AuditType(label = self.label)
+        self.obj = AuditType(label=self.label)
 
     def test_create_audit_type(self):
         assert isinstance(self.obj, AuditType)
-    
+
     def test_field_type(self):
         assert self.label == self.obj.label
+
 
 class AuditSessionModelTestCase(unittest.TestCase):
     def setUp(self):
         self.type_ = "General"
-        self.type = AuditType.objects.create(label = self.type_)
-        self.obj = AuditSession.objects.create(type = self.type)
-    
+        self.type = AuditType.objects.create(label=self.type_)
+        self.obj = AuditSession.objects.create(type=self.type)
+
     def test_create_audit_session(self):
         assert isinstance(self.obj, AuditSession)
-    
+
     def test_field_type(self):
-        assert self.type == self.obj.type 
-        
+        assert self.type == self.obj.type
+
+
 class AuditSessionSerializerTestCase(unittest.TestCase):
     def setUp(self):
-       self.type_obj = AuditType(label = "General")
-       self.obj = AuditSession(type = self.type_obj)
+        self.type_obj = AuditType(label="General")
+        self.obj = AuditSession(type=self.type_obj)
 
     def test_audit_session_serializer(self):
         fetched_data = AuditSessionSerializer(instance=self.obj).data
@@ -60,10 +63,11 @@ class AuditSessionSerializerTestCase(unittest.TestCase):
         }
         assert fetched_data == expected_data
 
+
 class AuditTypeSerializerTestCase(unittest.TestCase):
     def setUp(self):
-       self.label = "Special"
-       self.obj = AuditType(label = self.label)
+        self.label = "Special"
+        self.obj = AuditType(label=self.label)
 
     def test_audit_type_serializer(self):
         fetched_data = AuditTypeSerializer(instance=self.obj).data
@@ -73,6 +77,7 @@ class AuditTypeSerializerTestCase(unittest.TestCase):
         }
         assert fetched_data == expected_data
 
+
 class GetAllAuditTypeViewTestCase(unittest.TestCase):
     def setUp(self):
         self.client = APIClient()
@@ -80,7 +85,7 @@ class GetAllAuditTypeViewTestCase(unittest.TestCase):
         self.auth_response = self.client.post(self.login_url, {"username": "naruto", "password": "naruto"})
         self.tokens = self.auth_response.json()
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.tokens['access']}")
-        
+
     def test_get_all_audit_type(self):
         response = self.client.get('/audit/get-all-audit-types/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -88,6 +93,7 @@ class GetAllAuditTypeViewTestCase(unittest.TestCase):
         audit_types = AuditType.objects.all()
         serializer = AuditTypeSerializer(audit_types, many=True)
         self.assertEqual(data, serializer.data)
+
 
 class CreateNewAuditSessionViewTestCase(unittest.TestCase):
 
@@ -98,34 +104,36 @@ class CreateNewAuditSessionViewTestCase(unittest.TestCase):
         self.tokens = self.auth_response.json()
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.tokens['access']}")
         self.audit_type = AuditType.objects.create(label="General")
-        
+
     def test_create_new_audit_session(self):
         type_id = str(self.audit_type.id)
-        response = self.client.put('/audit/create-new-audit-session/'+type_id)
+        response = self.client.put('/audit/create-new-audit-session/' + type_id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
 
 class AuditCategoryModelTestCase(unittest.TestCase):
     def setUp(self):
         self.title = "Kredit"
 
-        self.typeobj = AuditType(label = "General")
+        self.typeobj = AuditType(label="General")
 
-        self.obj = AuditCategory(title = self.title, audit_type = self.typeobj)
+        self.obj = AuditCategory(title=self.title, audit_type=self.typeobj)
 
     def test_create_audit_category(self):
         assert isinstance(self.obj, AuditCategory)
-    
+
     def test_field_category(self):
         assert self.title == self.obj.title
 
     def test_field_audittype(self):
         assert self.typeobj == self.obj.audit_type
 
+
 class AuditCategorySerializerTestCase(unittest.TestCase):
     def setUp(self):
-       self.title = "Some Audit Category"
-       self.typeobj = AuditType(label = "General")
-       self.obj = AuditCategory(title = self.title, audit_type = self.typeobj)
+        self.title = "Some Audit Category"
+        self.typeobj = AuditType(label="General")
+        self.obj = AuditCategory(title=self.title, audit_type=self.typeobj)
 
     def test_audit_category_serializer(self):
         serializer_data = AuditCategorySerializer(instance=self.obj).data
@@ -135,6 +143,7 @@ class AuditCategorySerializerTestCase(unittest.TestCase):
             'audit_type': self.typeobj.id,
         }
         assert serializer_data == expected_data
+
 
 class GetAuditCategoriesViewTestCase(unittest.TestCase):
     def setUp(self):
@@ -146,32 +155,33 @@ class GetAuditCategoriesViewTestCase(unittest.TestCase):
 
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.tokens['access']}")
 
-        
         self.audit_type = AuditType.objects.create(label='Some Audit Type')
         self.audit_category = AuditCategory.objects.create(title='Some Audit Category', audit_type=self.audit_type)
-    
+
     def test_get_audit_categories_view(self):
-        response = self.client.get('/audit/audit-categories/'+str(self.audit_type.id))
+        response = self.client.get('/audit/audit-categories/' + str(self.audit_type.id))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        
+
         serializer_data = AuditCategorySerializer([self.audit_category], many=True).data
         self.assertEqual(response.data, serializer_data)
-    
+
     def test_get_audit_categories_view_with_invalid_audit_type(self):
         response = self.client.get('/audit/audit-categories/1101')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+
 class PostAuditDataViewTestCase(unittest.TestCase):
     def setUp(self):
         self.client = APIClient()
-        
+
         self.login_url = '/authentication/token/'
         self.auth_response = self.client.post(self.login_url, {"username": "naruto", "password": "naruto"})
         self.tokens = self.auth_response.json()
 
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.tokens['access']}")
 
-        self.db_client = MongoClient('mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true')
+        self.db_client = MongoClient(
+            'mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true')
         self.db = self.db_client['masys']
         self.collection = self.db['audit_data']
 
@@ -196,8 +206,8 @@ class PostAuditDataViewTestCase(unittest.TestCase):
             zip_file.writestr('example.xlsx', file_data.getvalue())
         zip_data.seek(0)
 
-        response = self.client.post('/audit/upload-data', 
-                                    {'file': zip_data, 'audit_session_id' : 1001}, format='multipart')
+        response = self.client.post('/audit/upload-data',
+                                    {'file': zip_data, 'audit_session_id': 1001}, format='multipart')
 
         # Check the response has a success status code and the expected message and data
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -210,7 +220,49 @@ class PostAuditDataViewTestCase(unittest.TestCase):
 
         # Reset test data on database
         child_collection.delete_many({})
-        
+
+
+class QueryQuestionTestCase(unittest.TestCase):
+    def setUp(self):
+        self.client = APIClient()
+
+        client = MongoClient('mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true')
+        db = client['masys']
+        collection = db['audit_data']
+        collection.insert_one({'name': 'audit-data-123'})
+
+        test_post_audit_data(self.client)
+
+    def tearDown(self):
+        delete_audit_question_session('audit_data', 'audit-data', '123')
+
+    def test_query_sample_with_valid_input(self):
+        id_session = "123"
+        query = {'Name': 'Alice'}
+        sort = [("Age", 1)]
+        limit = 0
+
+        result = query_sample(id_session, query, sort, limit)
+        result_list = json.loads(result)
+
+        self.assertEqual(result_list[0]["Name"], 'Alice')
+
+    def test_query_sample_with_invalid_session_id(self):
+        id_session = "456"
+        query = {'Name': 'John'}
+        sort = [("Age", 1)]
+        limit = 0
+        with pytest.raises(Exception):
+            query_sample(id_session, query, sort, limit)
+
+    def test_query_sample_with_empty_session_id(self):
+        id_session = None
+        query = {'Name': 'John'}
+        sort = [("Age", 1)]
+        limit = 0
+        with pytest.raises(Exception):
+            query_sample(id_session, query, sort, limit)
+
 
 class PostAuditQuestionSessionTestCase(unittest.TestCase):
     def setUp(self):
@@ -219,7 +271,7 @@ class PostAuditQuestionSessionTestCase(unittest.TestCase):
 
     def tearDown(self):
         self.temp_file.close()
-        delete_audit_question_session('attachment', 'test')
+        delete_audit_question_session('attachment', 'attachment', 'test')
 
     def post_audit_question_session(self, token):
         with open(self.temp_file.name, 'rb') as f:
@@ -303,7 +355,8 @@ class GetAuditQuestionsViewTestCase(unittest.TestCase):
     def setUp(self):
         self.audit_type = AuditType.objects.create(label='Some Audit Type')
         self.audit_category = AuditCategory.objects.create(title='Some Audit Category', audit_type=self.audit_type)
-        self.audit_question = AuditQuestion.objects.create(title='Some Audit Question', audit_category=self.audit_category)
+        self.audit_question = AuditQuestion.objects.create(title='Some Audit Question',
+                                                           audit_category=self.audit_category)
 
         self.client = APIClient()
         self.login_url = '/authentication/token/'
@@ -311,7 +364,6 @@ class GetAuditQuestionsViewTestCase(unittest.TestCase):
         self.tokens = self.auth_response.json()
 
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.tokens['access']}")
-
 
     def test_get_audit_questions_view(self):
         response = self.client.get('/audit/audit-questions/'+str(self.audit_category.id))
