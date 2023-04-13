@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 from pathlib import Path
 from datetime import timedelta
 import dotenv
+import configparser
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -31,9 +32,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-_bpvjg9vj=t#qkvb4zctoz_zp@$s+q!$nu%9-_m$2lc(vke8$8'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -86,6 +87,10 @@ WSGI_APPLICATION = 'microfinance_audit_system_be.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
+config = configparser.ConfigParser()
+config.read('test_config.ini')
+username = config.get('credentials', 'db-username')
+password = config.get('credentials', 'db-password')
 
 DATABASES = {
        'default': {
@@ -94,8 +99,8 @@ DATABASES = {
            'CLIENT' : {
             'host' : 'mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true&w=majority',
             'uuidRepresentation': 'standard',
-            'USERNAME' : 'cugil',
-            'PASSWORD' : 'agill'
+            'USERNAME' : username,
+            'PASSWORD' : password
            }
        }
    }

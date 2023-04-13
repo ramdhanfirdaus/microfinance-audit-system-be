@@ -5,18 +5,19 @@ from django.test import override_settings
 from django.apps import apps
 
 from pymongo import MongoClient
-from openpyxl import Workbook
+
+from requests_toolbelt.multipart.encoder import MultipartEncoder
 
 import unittest, os, tempfile, zipfile
 
-import os
-import tempfile
-import zipfile
-import io
+from openpyxl import Workbook
 
 from .apps import AuditConfig
 from .models import AuditQuestion, AuditType, AuditSession, AuditCategory
 from .serializer import AuditQuestionSerializer, AuditTypeSerializer, AuditSessionSerializer, AuditCategorySerializer
+from .views_questions import save_attachment, save_comment_remark
+from .test_utils import cek_mongodb, create_test_zip, delete_audit_question_session, login_test
+
 
 class AuditAppTestCase(unittest.TestCase):
     def test_apps(self):
@@ -209,6 +210,94 @@ class PostAuditDataViewTestCase(unittest.TestCase):
 
         # Reset test data on database
         child_collection.delete_many({})
+        
+
+class PostAuditQuestionSessionTestCase(unittest.TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.temp_file = create_test_zip()
+
+    def tearDown(self):
+        self.temp_file.close()
+        delete_audit_question_session('attachment', 'test')
+
+    def post_audit_question_session(self, token):
+        with open(self.temp_file.name, 'rb') as f:
+            multipart_data = MultipartEncoder(fields={
+                'id_audit': 'test',
+                'comment': 'test',
+                'remark': 'test',
+                'attachment': ('filename.zip', f, 'application/zip')
+            })
+
+            data_dict = {k: v[1] if isinstance(v, tuple) else v for k, v in multipart_data.fields.items()}
+
+            self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
+
+            return self.client.post('/audit/audit-question-session', data=data_dict, format='multipart')
+
+    def test_post_url_audit_question_session_not_login(self):
+        response = self.post_audit_question_session("token")
+
+        # Check that the response has a 401 UNAUTHORIZED status code
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    @override_settings(MEDIA_ROOT=tempfile.gettempdir())
+    def test_post_url_audit_question_session(self):
+        tokens = login_test()
+
+        collections_count, child_collections_count = cek_mongodb('attachment', 'test')
+        self.assertEqual(collections_count, 0)
+        self.assertEqual(child_collections_count, 0)
+
+        # Post in First Time addition collections_count and child_collections_count
+        response = self.post_audit_question_session(tokens['access'])
+
+        collections_count, child_collections_count = cek_mongodb('attachment', 'test')
+        self.assertEqual(collections_count, 1)
+        self.assertEqual(child_collections_count, 1)
+
+        # Check that the response has a 200 OK status code
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Post in Second Time just addition child_collections_count
+        response = self.post_audit_question_session(tokens['access'])
+
+        collections_count, child_collections_count = cek_mongodb('attachment', 'test')
+        self.assertEqual(collections_count, 1)
+        self.assertEqual(child_collections_count, 2)
+
+        # Check that the response has a 200 OK status code
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+class SaveAttachmentTestCase(unittest.TestCase):
+    def setUp(self):
+        self.temp_file = tempfile.NamedTemporaryFile(delete=False)
+        self.temp_file = create_test_zip()
+
+    def tearDown(self):
+        self.temp_file.close()
+
+    @override_settings(MEDIA_ROOT=tempfile.gettempdir())
+    def test_save_attachment(self):
+        with open(self.temp_file.name, 'rb') as attachment:
+            data = {}
+            data = save_attachment(attachment, data)
+            self.assertNotEqual(data, {})
+
+
+class SaveCommentRemarkTestCase(unittest.TestCase):
+    def test_save_comment_remark(self):
+        data = {}
+        comment = 'Test comment'
+        remark = 'Test remark'
+        data = save_comment_remark(comment, remark, data)
+        self.assertIn('comment', data.keys())
+        self.assertIn('remark', data.keys())
+        self.assertEqual(data['comment'], comment)
+        self.assertEqual(data['remark'], remark)
+
 
 class GetAuditQuestionsViewTestCase(unittest.TestCase):
     def setUp(self):
