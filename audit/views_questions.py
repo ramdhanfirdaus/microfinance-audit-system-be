@@ -23,7 +23,7 @@ def query_sample(id_session, query, sort, limit):
         data = list(child_collection.find(query, {"_id": 0}).sort(sort).limit(limit))
         return json.dumps(data)
     else:
-        raise Exception()
+        raise ValueError("Data audit cannot be empty.")
 
 
 @require_POST

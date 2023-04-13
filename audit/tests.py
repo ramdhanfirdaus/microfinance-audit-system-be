@@ -252,7 +252,7 @@ class QueryQuestionTestCase(unittest.TestCase):
         query = {'Name': 'John'}
         sort = [("Age", 1)]
         limit = 0
-        with pytest.raises(Exception):
+        with pytest.raises(ValueError):
             query_sample(id_session, query, sort, limit)
 
     def test_query_sample_with_empty_session_id(self):
@@ -260,7 +260,7 @@ class QueryQuestionTestCase(unittest.TestCase):
         query = {'Name': 'John'}
         sort = [("Age", 1)]
         limit = 0
-        with pytest.raises(Exception):
+        with pytest.raises(ValueError):
             query_sample(id_session, query, sort, limit)
 
 

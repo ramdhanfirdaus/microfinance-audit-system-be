@@ -4,11 +4,11 @@ from rest_framework.test import APIClient
 from openpyxl import Workbook
 import io
 
+DB = MongoClient('mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true')['masys']
+
 def cek_mongodb(name_collection, id):
     # Check that the files were saved to the child collection
-    client = MongoClient('mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true')
-    db = client['masys']
-    collection = db[name_collection]
+    collection = DB[name_collection]
     data_name = name_collection + '-' + id
     child_collection = collection[data_name]
     return collection.count_documents({'name': data_name}), child_collection.count_documents({})
@@ -27,9 +27,7 @@ def create_test_zip():
 
 
 def delete_audit_question_session(name_collection, name_child_collection, id):
-    client = MongoClient('mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true')
-    db = client['masys']
-    collection = db[name_collection]
+    collection = DB[name_collection]
     data_name = name_child_collection + '-' + id
     child_collection = collection[data_name]
 
