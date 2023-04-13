@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.views.decorators.http import require_POST
 from pymongo import MongoClient
 
-from audit.views import extract_data
+from audit.views import extract_zip
 
 
 @require_POST
@@ -39,7 +39,7 @@ def post_audit_question_session(request):
 
 
 def save_attachment(zip_file, data):
-    extracted_data = extract_data(zip_file)
+    extracted_data = extract_zip(zip_file)
 
     count = 0
     for filename, file_data in extracted_data.items():
