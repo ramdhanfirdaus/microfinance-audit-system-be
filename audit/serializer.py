@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import AuditType, AuditSession, AuditCategory
+from .models import AuditQuestion, AuditType, AuditSession, AuditCategory
 
 class AuditTypeSerializer(serializers.ModelSerializer):
     class Meta:
@@ -15,3 +15,9 @@ class AuditCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = AuditCategory
         fields = '__all__'
+
+class AuditQuestionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AuditQuestion
+        fields = ['id', 'title']
+        
