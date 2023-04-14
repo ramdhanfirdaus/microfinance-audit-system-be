@@ -7,7 +7,7 @@ from django.views.decorators.http import require_POST
 from pymongo import MongoClient
 import json
 
-from audit.views import extract_zip
+from audit.views.views import extract_zip
 
 
 def query_sample(id_session, query, sort, limit):

@@ -13,8 +13,8 @@ import zipfile
 import openpyxl
 import re
 
-from .models import AuditQuestion, AuditType, AuditSession, AuditCategory
-from .serializer import  AuditQuestionSerializer, AuditTypeSerializer, AuditCategorySerializer
+from audit.models import AuditQuestion, AuditType, AuditSession, AuditCategory
+from audit.serializer import  AuditQuestionSerializer, AuditTypeSerializer, AuditCategorySerializer
 from authentication.models import Auditor
 from authentication.serializer import AuditorSerializer
 
