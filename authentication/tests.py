@@ -12,7 +12,6 @@ class AuditorTest(unittest.TestCase):
         self.assertTrue(hasattr(Auditor(), 'session')) #R
 
 class LoginTest(unittest.TestCase):
-    pass
     # TODO make this test to execute only when test instance is running
     hasloggedin_url = 'http://localhost:8000/authentication/hasloggedin/'
     login_url = 'http://localhost:8000/authentication/token/'
