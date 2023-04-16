@@ -63,12 +63,11 @@ def get_audit_categories(request, id):
 def post_audit_data(request):
     zip_file = request.FILES.get('file')
     audit_session_id = request.data.get('audit_session_id')
-    print(audit_session_id)
 
     files = extract_zip(zip_file)
 
     if(len(files) == 0) :
-        raise ValidationError
+        return Response(data={'detail':'Invalid zip file'}, status=status.HTTP_400_BAD_REQUEST)
     
     data_name = 'audit-data-'+str(audit_session_id)
     child_collection = get_collection(data_name)
@@ -96,8 +95,13 @@ def get_audit_question(request, id):
 
 def extract_zip(zip_file):
     result_data = dict()
+    pattern = r'^\w+\.xlsx$'
+
     with zipfile.ZipFile(zip_file, 'r') as zip_ref:
         for filename in zip_ref.namelist():
+            if not re.match(pattern, filename) :
+                continue
+            
             file_data = zip_ref.read(filename)
             result_data[filename] = file_data
 
@@ -134,8 +138,5 @@ def get_collection(data_name):
     client = MongoClient('mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true')
     db = client['masys']
     collection = db['audit_data']
-
-    if collection[data_name] is None:
-        collection.insert_one({'name': data_name})
 
     return collection[data_name]
