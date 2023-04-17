@@ -151,6 +151,7 @@ class GetAuditCategoriesViewTestCase(unittest.TestCase):
 
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.tokens['access']}")
 
+        
         self.audit_type = AuditType.objects.create(label='Some Audit Type')
         self.audit_category = AuditCategory.objects.create(title='Some Audit Category', audit_type=self.audit_type)
 
@@ -169,6 +170,7 @@ class GetAuditCategoriesViewTestCase(unittest.TestCase):
 class PostAuditDataViewTestCase(unittest.TestCase):
     def setUp(self):
         self.client = APIClient()
+        self.url = '/audit/upload-data'
 
         self.login_url = '/authentication/token/'
         self.auth_response = self.client.post(self.login_url, {"username": "naruto", "password": "naruto"})
@@ -176,12 +178,13 @@ class PostAuditDataViewTestCase(unittest.TestCase):
 
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.tokens['access']}")
 
-        self.db_client = MongoClient(
-            'mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true')
+        self.db_client = MongoClient('mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true')
         self.db = self.db_client['masys']
         self.collection = self.db['audit_data']
 
         self.temp_file = tempfile.NamedTemporaryFile(delete=False)
+        self.test_file = 'test_file.txt'
+        self.test_zip = 'test_file.zip'
 
     def tearDown(self):
         self.temp_file.close()
@@ -196,16 +199,22 @@ class PostAuditDataViewTestCase(unittest.TestCase):
         worksheet.append(['Name', 'Age'])
         worksheet.append(['Alice', 25])
         worksheet.append(['Bob', 30])
+
         file_data = io.BytesIO()
         workbook.save(file_data)
         file_data.seek(0)
+
+        with open(self.test_file, 'w') as f:
+            f.write('This is a test file')
+
         zip_data = io.BytesIO()
         with zipfile.ZipFile(zip_data, 'w') as zip_file:
             zip_file.writestr('example.xlsx', file_data.getvalue())
+            zip_file.write(self.test_file)
         zip_data.seek(0)
 
-        response = self.client.post('/audit/upload-data',
-                                    {'file': zip_data, 'audit_session_id': 1001}, format='multipart')
+        response = self.client.post(self.url,
+                                    {'file': zip_data, 'audit_session_id' : 1001}, format='multipart')
 
         # Check the response has a success status code and the expected message and data
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -218,6 +227,29 @@ class PostAuditDataViewTestCase(unittest.TestCase):
 
         # Reset test data on database
         child_collection.delete_many({})
+        child_collection.drop()
+
+        os.remove(self.test_file)
+
+    def test_upload_invalid_file(self):
+        # create a fake zip file
+        with open(self.test_file, 'w') as f:
+            f.write('This is a fail test file')
+
+        with zipfile.ZipFile(self.test_zip, 'w') as myzip:
+             myzip.write(self.test_file)
+
+        # create a request with the fake zip file
+        with open(self.test_zip, 'rb') as file:
+            data = {'file': file, 'audit_session_id': 1001}
+            response = self.client.post(self.url, data, format='multipart')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['detail'], 'Invalid zip file')
+
+        # delete the test files
+        os.remove(self.test_zip)
+        os.remove(self.test_file)
 
 
 class GetAuditQuestionsViewTestCase(unittest.TestCase):
