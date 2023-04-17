@@ -49,7 +49,7 @@ def query_date(query, date, params):
         date = date - timedelta(days=365)
     elif date_str == "LASTMONTH":
         date = date - timedelta(days=30)
-    else: # date_str == "YESTERDAY"
+    elif date_str == "YESTERDAY":
         date = date - timedelta(days=1)
 
     query[params[0]][params[1]] = date
