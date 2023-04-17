@@ -5,7 +5,6 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.http import HttpResponse, JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 
 from pymongo import MongoClient
 from io import BytesIO
@@ -14,11 +13,9 @@ import zipfile
 import openpyxl
 import re
 
-from .models import AuditQuestion, AuditType, AuditSession, AuditCategory
-from .serializer import  AuditQuestionSerializer, AuditTypeSerializer, AuditSessionSerializer, AuditCategorySerializer
-from .models import AuditType, AuditCategory, AuditSession
+from audit.models import AuditQuestion, AuditType, AuditSession, AuditCategory
+from audit.serializer import  AuditQuestionSerializer, AuditTypeSerializer, AuditCategorySerializer
 from authentication.models import Auditor
-from .serializer import  AuditTypeSerializer, AuditCategorySerializer, AuditSessionSerializer
 from authentication.serializer import AuditorSerializer
 
 @api_view(['GET'])
