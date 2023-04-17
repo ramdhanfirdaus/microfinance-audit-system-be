@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
@@ -5,9 +7,54 @@ from rest_framework.permissions import IsAuthenticated
 
 from django.views.decorators.http import require_POST
 from pymongo import MongoClient
-import json
+import json, re, zipfile
 
-from audit.views.views import extract_zip
+
+def manage_query(query_str, date):
+    query = json.loads(query_str)
+
+    try:
+        sort = eval(re.sub(r'\[([\w\',\s-]+)]', r'(\1)', str(query["sort"])))
+        del query["sort"]
+    except KeyError:
+        sort = {}
+
+    try:
+        limit = query["limit"]
+        del query["limit"]
+    except KeyError:
+        limit = 0
+
+    if "TGL_KONDISI" in query:
+        query = query_date(query, date, ["TGL_KONDISI", "$gte"])
+        query = query_date(query, date, ["TGL_KONDISI", "$lte"])
+
+    query_str = json.dumps(query, default=json_converter)
+
+    return json.loads(query_str), sort, limit
+
+
+def json_converter(obj):
+    if isinstance(obj, datetime):
+        return obj.strftime("%Y-%m-%d %H:%M:%S")
+    raise TypeError(f"Object of type {obj.__class__.__name__} is not JSON serializable")
+
+
+def query_date(query, date, params):
+    date_str = query[params[0]][params[1]]
+
+    # date is for date_str == "TODAY"
+
+    if date_str == "LASTYEAR":
+        date = date - timedelta(days=365)
+    elif date_str == "LASTMONTH":
+        date = date - timedelta(days=30)
+    elif date_str == "YESTERDAY":
+        date = date - timedelta(days=1)
+
+    query[params[0]][params[1]] = date
+
+    return query
 
 
 def query_sample(id_session, query, sort, limit):
@@ -72,3 +119,13 @@ def save_comment_remark(comment, remark, data):
     data.update({'remark': str(remark)})
 
     return data
+
+
+def extract_zip(zip_file):
+    result_data = dict()
+    with zipfile.ZipFile(zip_file, 'r') as zip_ref:
+        for filename in zip_ref.namelist():
+            file_data = zip_ref.read(filename)
+            result_data[filename] = file_data
+
+    return result_data
