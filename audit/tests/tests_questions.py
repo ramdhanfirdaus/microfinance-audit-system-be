@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from rest_framework.test import APIClient
 from rest_framework import status
 
@@ -9,8 +11,120 @@ from requests_toolbelt.multipart.encoder import MultipartEncoder
 
 import unittest, tempfile, pytest, json
 
-from audit.views.views_questions import save_attachment, save_comment_remark, query_sample
-from audit.test_utils import cek_mongodb, create_test_zip, delete_audit_question_session, login_test, test_post_audit_data
+from audit.models import AuditSession
+from audit.views.views_questions import save_attachment, save_comment_remark, query_sample, manage_query, query_date, json_converter
+from audit.test_utils import cek_mongodb, create_test_zip, delete_audit_question_session, login_test, test_post_audit_data, \
+   create_test_objects, delete_test_objects
+
+
+class ManageQueryTestCase(unittest.TestCase):
+    def setUp(self):
+        create_test_objects()
+        self.session = AuditSession.objects.get(id=123)
+
+    def tearDown(self):
+        delete_audit_question_session('audit_data', 'audit-data', '123')
+        delete_test_objects()
+
+    def test_manage_query_with_sort_limit(self):
+        query_str = '''
+          {
+             "Name": "Alice",
+             "sort": [["Age", 1]],
+             "limit": 1
+          }
+          '''
+
+        query, limit, sort = manage_query(query_str, self.session.date)
+
+        self.assertEqual(limit, [("Age", 1)])
+        self.assertEqual(sort, 1)
+
+    def test_manage_query_without_sort_limit(self):
+        query_str = '{"Name": "Alice"}'
+
+        query, limit, sort = manage_query(query_str, self.session.date)
+
+        self.assertEqual(limit, {})
+        self.assertEqual(sort, 0)
+
+    def test_manage_query_with_tgl_kondisi(self):
+        query_str = '{"Name": "John", "TGL_KONDISI": {"$gte": "LASTMONTH", "$lte": "TODAY"}}'
+
+        query, limit, sort = manage_query(query_str, self.session.date)
+
+        self.assertIn('TGL_KONDISI', query)
+        self.assertIn('$gte', query['TGL_KONDISI'])
+        self.assertIn('$lte', query['TGL_KONDISI'])
+
+        self.assertNotEqual(query['TGL_KONDISI']['$gte'], "LASTMONTH")
+        self.assertNotEqual(query['TGL_KONDISI']['$lte'], "TODAY")
+
+    def test_manage_query_without_tgl_kondisi(self):
+        query_str = '{"Name": "Alice"}'
+        expected_result = {'Name': 'Alice'}
+
+        query, limit, sort = manage_query(query_str, self.session.date)
+
+        self.assertEqual(query, expected_result)
+
+
+class JsonConverterTestCase(unittest.TestCase):
+    def test_datetime_conversion(self):
+        test_datetime = datetime(2022, 1, 1, 10, 30, 0)
+        result = json.dumps(test_datetime, default=json_converter)
+        self.assertEqual(result, '"2022-01-01 10:30:00"')
+
+    def test_invalid_object_type(self):
+        test_object = {1, 2, 3}
+        with self.assertRaises(TypeError):
+          json.dumps(test_object, default=json_converter)
+
+
+class QueryDateTestCase(unittest.TestCase):
+    def setUp(self):
+        create_test_objects()
+        self.session = AuditSession.objects.get(id=123)
+
+    def tearDown(self):
+        delete_audit_question_session('audit_data', 'audit-data', '123')
+        delete_test_objects()
+
+    def test_query_date_with_last_year(self):
+        query = {"TGL_KONDISI": {"$gte": "LASTYEAR"}}
+        params = ["TGL_KONDISI", "$gte"]
+        query = query_date(query, self.session.date, params)
+
+        expected_date = self.session.date - timedelta(days=365)
+
+        self.assertLessEqual(query['TGL_KONDISI']['$gte'], expected_date)
+
+    def test_query_date_with_last_month(self):
+        query = {"TGL_KONDISI": {"$gte": "LASTMONTH"}}
+        params = ["TGL_KONDISI", "$gte"]
+        query = query_date(query, self.session.date, params)
+
+        expected_date = self.session.date - timedelta(days=30)
+
+        self.assertEqual(query["TGL_KONDISI"]["$gte"], expected_date)
+
+    def test_query_date_with_yesterday(self):
+        query = {"TGL_KONDISI": {"$gte": "YESTERDAY"}}
+        params = ["TGL_KONDISI", "$gte"]
+        query = query_date(query, self.session.date, params)
+
+        expected_date = self.session.date - timedelta(days=1)
+
+        self.assertEqual(query["TGL_KONDISI"]["$gte"], expected_date)
+
+    def test_query_date_with_today(self):
+        query = {"TGL_KONDISI": {"$lte": "TODAY"}}
+        params = ["TGL_KONDISI", "$lte"]
+        query = query_date(query, self.session.date, params)
+
+        expected_date = self.session.date
+
+        self.assertEqual(query["TGL_KONDISI"]["$lte"], expected_date)
 
 
 class QueryQuestionTestCase(unittest.TestCase):

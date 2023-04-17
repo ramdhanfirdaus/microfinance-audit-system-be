@@ -4,6 +4,8 @@ from rest_framework.test import APIClient
 from openpyxl import Workbook
 import io
 
+from audit.models import AuditType, AuditSession, AuditCategory, AuditQuestion
+
 DB = MongoClient('mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true')['masys']
 
 def cek_mongodb(name_collection, id):
@@ -64,3 +66,56 @@ def test_post_audit_data(client):
 
     client.post('/audit/upload-data',
                                 {'file': zip_data, 'audit_session_id' : "123"}, format='multipart')
+
+def create_test_objects():
+    AuditType.objects.update_or_create(
+        id=123
+    )
+    AuditSession.objects.update_or_create(
+        id=123,
+        type=AuditType.objects.get(id=123)
+    )
+    AuditSession.objects.update_or_create(
+        id=456,
+        type=AuditType.objects.get(id=123)
+    )
+    AuditCategory.objects.update_or_create(
+        id=123,
+        audit_type=AuditType.objects.get(id=123)
+    )
+
+    AuditQuestion.objects.update_or_create(
+        id=123,
+        audit_category=AuditCategory.objects.get(id=123),
+        query='''
+              {
+                 "Name": "Alice",
+                 "sort": '[["Age", 1]]',
+                 "limit": 0
+              }
+              '''
+    )
+    AuditQuestion.objects.update_or_create(
+        id=456,
+        audit_category=AuditCategory.objects.get(id=123),
+        query='''
+                  {
+                     "Name": "Alice",
+                     "sort": '[["Age", 1]]',
+                     "limit": 0
+                  }
+                  '''
+    )
+    AuditQuestion.objects.update_or_create(
+        id=789,
+        audit_category=AuditCategory.objects.get(id=123),
+    )
+
+def delete_test_objects():
+    AuditQuestion.objects.get(id=789).delete()
+    AuditQuestion.objects.get(id=456).delete()
+    AuditQuestion.objects.get(id=123).delete()
+    AuditCategory.objects.get(id=123).delete()
+    AuditSession.objects.get(id=456).delete()
+    AuditSession.objects.get(id=123).delete()
+    AuditType.objects.get(id=123).delete()
