@@ -17,6 +17,65 @@ from audit.test_utils import cek_mongodb, create_test_zip, delete_audit_question
    create_test_objects, delete_test_objects
 
 
+class GetSampleTestCase(unittest.TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        create_test_objects()
+
+        client = MongoClient('mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true')
+        db = client['masys']
+        collection = db['audit_data']
+        collection.insert_one({'name': 'audit-data-123'})
+
+    def tearDown(self):
+        delete_audit_question_session('audit_data', 'audit-data', '123')
+        delete_test_objects()
+
+    def get_sample(self, token, id_session, id_question):
+        data = {
+            'id_session': id_session,
+            'id_question': id_question
+        }
+
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
+
+        return self.client.get('/audit/sample-data', data=data)
+
+    def test_get_sample_not_login(self):
+        response = self.get_sample("token", "123", "123")
+
+        # Check that the response has a 401 UNAUTHORIZED status code
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_sample_not_have_data(self):
+        test_post_audit_data(self.client)
+
+        tokens = login_test()
+        response = self.get_sample(tokens['access'], "456", "456")
+
+        # Check that the response has a 404 NOT FOUND status code
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+    def test_get_sample_not_have_query(self):
+        test_post_audit_data(self.client)
+
+        tokens = login_test()
+        response = self.get_sample(tokens['access'], "456", "789")
+
+        # Check that the response has a 404 NOT FOUND status code
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_sample_have_data(self):
+        test_post_audit_data(self.client)
+
+        tokens = login_test()
+        response = self.get_sample(tokens['access'], "123", "123")
+
+        # Check that the response has a 200 OK status code
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
 class ManageQueryTestCase(unittest.TestCase):
     def setUp(self):
         create_test_objects()
