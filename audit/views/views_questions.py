@@ -16,13 +16,13 @@ def manage_query(query_str, date):
     try:
         sort = eval(re.sub(r'\[([\w\',\s-]+)]', r'(\1)', str(query["sort"])))
         del query["sort"]
-    except:
+    except KeyError:
         sort = {}
 
     try:
         limit = query["limit"]
         del query["limit"]
-    except:
+    except KeyError:
         limit = 0
 
     if "TGL_KONDISI" in query:
@@ -41,16 +41,16 @@ def json_converter(obj):
 
 
 def query_date(query, date, params):
-    str = query[params[0]][params[1]]
+    date_str = query[params[0]][params[1]]
 
-    if str == "LASTYEAR":
+    # date is for date_str == "TODAY"
+
+    if date_str == "LASTYEAR":
         date = date - timedelta(days=365)
-    elif str == "LASTMONTH":
+    elif date_str == "LASTMONTH":
         date = date - timedelta(days=30)
-    elif str == "YESTERDAY":
+    else: # date_str == "YESTERDAY"
         date = date - timedelta(days=1)
-    else: # str == "TODAY":
-        date = date
 
     query[params[0]][params[1]] = date
 

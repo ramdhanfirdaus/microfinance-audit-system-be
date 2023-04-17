@@ -46,6 +46,7 @@ def login_test():
     r = APIClient().post('/authentication/token/', data={"username": username, "password": password})
     return r.json()
 
+
 def test_post_audit_data(client):
     workbook = Workbook()
     worksheet = workbook.create_sheet("Sheet1")
@@ -66,6 +67,7 @@ def test_post_audit_data(client):
 
     client.post('/audit/upload-data',
                                 {'file': zip_data, 'audit_session_id' : "123"}, format='multipart')
+
 
 def create_test_objects():
     AuditType.objects.update_or_create(
@@ -110,6 +112,7 @@ def create_test_objects():
         id=789,
         audit_category=AuditCategory.objects.get(id=123),
     )
+
 
 def delete_test_objects():
     AuditQuestion.objects.get(id=789).delete()
