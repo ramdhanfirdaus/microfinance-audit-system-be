@@ -1,7 +1,7 @@
 from django.urls import path
 
-from audit.views.views import get_all_audit_types, get_all_auditors, create_new_audit_session, get_audit_categories, post_audit_data, get_audit_question
-from audit.views.views_questions import post_audit_question_session
+from audit.views.views import get_all_audit_types, get_all_auditors, create_new_audit_session, get_audit_categories, post_audit_data
+from audit.views.views_questions import post_audit_question_session, get_audit_question
 
 urlpatterns = [
     path('get-all-audit-types/', get_all_audit_types, name='get_audit_types'),
