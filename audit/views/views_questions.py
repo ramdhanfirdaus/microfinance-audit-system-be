@@ -6,12 +6,39 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
 from django.core.exceptions import ObjectDoesNotExist
-from django.views.decorators.http import require_POST
+from django.http import HttpResponse
+from django.views.decorators.http import require_POST, require_GET
 from pymongo import MongoClient
 import json, re, zipfile
 
-from audit.models import AuditQuestion
+from audit.models import AuditQuestion, AuditSession, AuditType
 from audit.serializer import AuditQuestionSerializer, re, zipfile
+
+@require_GET
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_sample(request):
+    id_session = request.GET.get('id_session')
+    id_question = request.GET.get('id_question')
+
+    query_string = AuditQuestion.objects.get(id=int(id_question)).query
+
+    if query_string != '':
+        session = AuditSession.objects.get(
+            id=int(id_session))
+        date = session.date
+
+        query, sort, limit = manage_query(query_string, date)
+
+        try:
+            data_json = query_sample(id_session, query, sort, limit)
+            return HttpResponse(data_json, content_type="application/json")
+        except ValueError:
+            msg = "Data audit tidak ditemukan. Harap upload data terlebih dahulu."
+            return Response(data={'message': msg}, status=status.HTTP_404_NOT_FOUND)
+    else:
+        msg = "Query tidak ditemukan. Harap menghubungi Admin untuk memasukkan query."
+        return Response(data={'message': msg}, status=status.HTTP_404_NOT_FOUND)
 
 
 def manage_query(query_str, date):
@@ -93,7 +120,7 @@ def post_audit_question_session(request):
 
     data_count = collection.count_documents({'name': data_name})
 
-    if (data_count == 0):
+    if data_count == 0:
         collection.insert_one({'name': data_name})
     child_collection = collection[data_name]
 
