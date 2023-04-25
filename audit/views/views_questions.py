@@ -5,13 +5,14 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
 from django.views.decorators.http import require_POST, require_GET
 from pymongo import MongoClient
 import json, re, zipfile
 
 from audit.models import AuditQuestion, AuditSession, AuditType
-
+from audit.serializer import AuditQuestionSerializer, re, zipfile
 
 @require_GET
 @api_view(['GET'])
@@ -159,3 +160,19 @@ def extract_zip(zip_file):
             result_data[filename] = file_data
 
     return result_data
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_audit_question(request, id):
+    try :
+        audit_questions = AuditQuestion.objects.filter(audit_category = int(id))
+
+        if len(audit_questions) == 0 :
+            raise ObjectDoesNotExist
+        
+    except ObjectDoesNotExist :
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    
+    serializer = AuditQuestionSerializer(audit_questions, many=True)
+    return Response(serializer.data)
