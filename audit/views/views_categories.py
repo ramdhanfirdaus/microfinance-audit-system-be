@@ -14,7 +14,9 @@ from audit.serializer import  AuditCategorySerializer
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_all_audit_categories(request):
-    pass
+    categories = AuditCategory.objects.all()
+    serializer = AuditCategorySerializer(categories, many=True)
+    return JsonResponse(serializer.data, safe=False)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -37,4 +39,16 @@ def get_audit_categories(request, id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def post_audit_category(request):
-    pass
+    title = request.POST.get('title')
+    audit_type_id = request.POST.get('audit_type_id')
+    if title and audit_type_id:
+        title = title.lower()
+        existing_audit_category = AuditCategory.objects.filter(title=title, audit_type_id=audit_type_id).first()
+        if existing_audit_category:
+            return JsonResponse({'error': 'Sudah ada kategori dengan nama yang sama'}, status=400)
+        audit_type = AuditType.objects.get(id=audit_type_id)
+        audit_category = AuditCategory(title=title, audit_type=audit_type)
+        audit_category.save()
+        return JsonResponse({'success': True, 'message': f'berhasil manambahkan kategori audit "{title}"'})
+    else:
+        return JsonResponse({'error': 'Missing required parameters'}, status=400)

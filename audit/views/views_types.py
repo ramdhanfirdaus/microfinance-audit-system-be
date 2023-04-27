@@ -19,5 +19,15 @@ def get_all_audit_types(request): #return all audit types
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def post_audit_type(request):
-    pass
+    label = request.POST.get('label')
+    if label:
+        label = label.lower()
+        existing_audit_type = AuditType.objects.filter(label=label).first()
+        if existing_audit_type:
+            return JsonResponse({'error': 'Sudah ada kategori dengan nama yang sama'}, status=400)
+        audit_type = AuditType(label=label)
+        audit_type.save()
+        return JsonResponse({'success': True, 'message': f'berhasil manambahkan tipe audit "{label}"'})
+    else:
+        return JsonResponse({'error': 'Missing required parameters'}, status=400)
 
