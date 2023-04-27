@@ -104,6 +104,18 @@ def get_all_audit_questions(request):
     serializer = AuditQuestionSerializer(audit_questions, many=True)
     return Response(serializer.data)
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_audit_question(request):
+    
+    AuditQuestion.objects.create(
+        title = request.POST.get('title'),
+        audit_category = AuditCategory.objects.get(id=request.POST.get('audit_category_id')),
+    )
+
+    return Response(data={'message': "Audit Question baru berhasil ditambahkan"}, status=status.HTTP_200_OK)
+
+
 def extract_zip(zip_file):
     result_data = dict()
     pattern = r'^\w+\.xlsx$'
