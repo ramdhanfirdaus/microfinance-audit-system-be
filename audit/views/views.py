@@ -90,6 +90,20 @@ def get_audit_question(request, id):
     serializer = AuditQuestionSerializer(audit_questions, many=True)
     return Response(serializer.data)
 
+@api_view(['GET'])
+def get_all_audit_questions(request):
+    try :
+        audit_questions = AuditQuestion.objects.all()
+
+        if len(audit_questions) == 0 :
+            raise ObjectDoesNotExist
+        
+    except ObjectDoesNotExist :
+        return Response(data={'message':"Belum ada Audit Question"}, status=status.HTTP_200_OK)
+    
+    serializer = AuditQuestionSerializer(audit_questions, many=True)
+    return Response(serializer.data)
+
 def extract_zip(zip_file):
     result_data = dict()
     pattern = r'^\w+\.xlsx$'
