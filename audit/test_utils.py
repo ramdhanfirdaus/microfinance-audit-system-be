@@ -92,7 +92,7 @@ def create_test_objects():
         query='''
               {
                  "Name": "Alice",
-                 "sort": '[["Age", 1]]',
+                 "sort": [["Age", 1]],
                  "limit": 0
               }
               '''
@@ -103,7 +103,7 @@ def create_test_objects():
         query='''
                   {
                      "Name": "Alice",
-                     "sort": '[["Age", 1]]',
+                     "sort": [["Age", 1]],
                      "limit": 0
                   }
                   '''

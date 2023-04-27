@@ -13,8 +13,8 @@ import zipfile
 import openpyxl
 import re
 
-from audit.models import AuditQuestion, AuditType, AuditSession, AuditCategory
-from audit.serializer import  AuditQuestionSerializer, AuditTypeSerializer, AuditCategorySerializer
+from audit.models import AuditType, AuditSession, AuditCategory
+from audit.serializer import AuditTypeSerializer, AuditCategorySerializer
 from authentication.models import Auditor
 from authentication.serializer import AuditorSerializer
 
@@ -76,46 +76,6 @@ def post_audit_data(request):
         
     return Response(data={'message':"File uploaded to database", 'data': data_name}, status=status.HTTP_200_OK)
 
-@api_view(['GET'])
-def get_audit_question(request, id):
-    try :
-        audit_questions = AuditQuestion.objects.filter(audit_category = int(id))
-
-        if len(audit_questions) == 0 :
-            raise ObjectDoesNotExist
-        
-    except ObjectDoesNotExist :
-        return Response(status=status.HTTP_404_NOT_FOUND)
-    
-    serializer = AuditQuestionSerializer(audit_questions, many=True)
-    return Response(serializer.data)
-
-@api_view(['GET'])
-def get_all_audit_questions(request):
-    try :
-        audit_questions = AuditQuestion.objects.all()
-
-        if len(audit_questions) == 0 :
-            raise ObjectDoesNotExist
-        
-    except ObjectDoesNotExist :
-        return Response(data={'message':"Belum ada Audit Question"}, status=status.HTTP_200_OK)
-    
-    serializer = AuditQuestionSerializer(audit_questions, many=True)
-    return Response(serializer.data)
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def add_audit_question(request):
-    
-    AuditQuestion.objects.create(
-        title = request.POST.get('title'),
-        audit_category = AuditCategory.objects.get(id=request.POST.get('audit_category_id')),
-    )
-
-    return Response(data={'message': "Audit Question baru berhasil ditambahkan"}, status=status.HTTP_200_OK)
-
-
 def extract_zip(zip_file):
     result_data = dict()
     pattern = r'^\w+\.xlsx$'
@@ -155,7 +115,6 @@ def extract_files(files):
             data.append(row_data)
 
     return data
-
 
 def get_collection(data_name):
     client = MongoClient('mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true')
