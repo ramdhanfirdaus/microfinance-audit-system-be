@@ -12,7 +12,7 @@ from pymongo import MongoClient
 import json, re, zipfile
 
 from audit.models import AuditQuestion, AuditSession, AuditCategory
-from audit.serializer import AuditQuestionSerializer, re, zipfile
+from audit.serializer import AuditQuestionSerializer
 
 @require_GET
 @api_view(['GET'])
