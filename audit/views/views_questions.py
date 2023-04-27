@@ -11,8 +11,8 @@ from django.views.decorators.http import require_POST, require_GET
 from pymongo import MongoClient
 import json, re, zipfile
 
-from audit.models import AuditQuestion, AuditSession, AuditType
-from audit.serializer import AuditQuestionSerializer, re, zipfile
+from audit.models import AuditQuestion, AuditSession
+from audit.serializer import AuditQuestionSerializer
 
 @require_GET
 @api_view(['GET'])

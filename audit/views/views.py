@@ -1,9 +1,8 @@
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated
 
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.http import HttpResponse, JsonResponse
 
 from pymongo import MongoClient
@@ -13,8 +12,7 @@ import zipfile
 import openpyxl
 import re
 
-from audit.models import AuditQuestion, AuditType, AuditSession, AuditCategory
-from audit.serializer import  AuditQuestionSerializer, AuditTypeSerializer, AuditCategorySerializer
+from audit.models import AuditType, AuditSession
 from authentication.models import Auditor
 from authentication.serializer import AuditorSerializer
 

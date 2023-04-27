@@ -1,10 +1,7 @@
 import unittest
-from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APITestCase, APIClient
+from rest_framework.test import APIClient
 from audit.models import AuditCategory, AuditType
-from audit.serializer import AuditCategorySerializer
-from audit.test_utils import create_test_objects, delete_test_objects
 
 class PostAuditCategoryTest(unittest.TestCase):
     def setUp(self):

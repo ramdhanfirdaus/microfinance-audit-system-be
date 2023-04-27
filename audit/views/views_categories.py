@@ -5,8 +5,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
 from django.core.exceptions import ObjectDoesNotExist
-from django.views.decorators.http import require_POST, require_GET
-from pymongo import MongoClient
+from django.views.decorators.http import require_POST
 
 from audit.models import AuditCategory, AuditType
 from audit.serializer import  AuditCategorySerializer
