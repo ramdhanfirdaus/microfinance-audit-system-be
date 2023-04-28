@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.decorators.http import require_POST
 
-from audit.models import AuditCategory, AuditType
+from audit.models import AuditCategory, AuditType, AuditSession
 from audit.serializer import  AuditCategorySerializer
 
 @api_view(['GET'])
@@ -30,6 +30,24 @@ def get_audit_categories(request, id):
         
     except ObjectDoesNotExist :
         return Response(status=status.HTTP_404_NOT_FOUND)
+    
+    serializer = AuditCategorySerializer(audit_categories, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_audit_categories_by_session(request, session_id):
+    print(id)
+
+    try :
+        audit_session = AuditSession.objects.get(id=int(session_id))
+        audit_categories = AuditCategory.objects.filter(audit_type=audit_session.type)
+
+        if len(audit_categories) == 0 :
+            raise ObjectDoesNotExist
+        
+    except Exception as e :
+        print(e)
     
     serializer = AuditCategorySerializer(audit_categories, many=True)
     return Response(serializer.data)
