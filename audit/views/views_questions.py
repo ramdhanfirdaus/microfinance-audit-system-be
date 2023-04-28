@@ -90,7 +90,7 @@ def query_date(query, date, params):
 
 def query_sample(id_session, query, sort, limit):
     client = MongoClient('mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true')
-    db = client['masys']
+    db = client['coba']
     collection = db['audit_data']
     data_name = 'audit-data-' + str(id_session)
 
@@ -117,7 +117,7 @@ def post_audit_question_session(request):
     remark = request.POST.get('remark')
 
     client = MongoClient('mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true')
-    db = client['masys']
+    db = client['coba']
     collection = db['attachment']
     data_name = 'attachment-' + str(id_audit)
 

@@ -23,7 +23,7 @@ class GetSampleTestCase(unittest.TestCase):
         create_test_objects()
 
         client = MongoClient('mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true')
-        db = client['masys']
+        db = client['coba']
         collection = db['audit_data']
         collection.insert_one({'name': 'audit-data-123'})
 
@@ -191,7 +191,7 @@ class QueryQuestionTestCase(unittest.TestCase):
         self.client = APIClient()
 
         client = MongoClient('mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true')
-        db = client['masys']
+        db = client['coba']
         collection = db['audit_data']
         collection.insert_one({'name': 'audit-data-123'})
 

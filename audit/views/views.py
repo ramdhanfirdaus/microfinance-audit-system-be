@@ -103,7 +103,7 @@ def extract_files(files):
 
 def get_collection(data_name):
     client = MongoClient('mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true')
-    db = client['masys']
+    db = client['coba']
     collection = db['audit_data']
 
     return collection[data_name]

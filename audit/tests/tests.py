@@ -179,7 +179,7 @@ class PostAuditDataViewTestCase(unittest.TestCase):
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.tokens['access']}")
 
         self.db_client = MongoClient('mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true')
-        self.db = self.db_client['masys']
+        self.db = self.db_client['coba']
         self.collection = self.db['audit_data']
 
         self.temp_file = tempfile.NamedTemporaryFile(delete=False)

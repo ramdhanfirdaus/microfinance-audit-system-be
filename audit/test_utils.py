@@ -6,7 +6,7 @@ import io
 
 from audit.models import AuditType, AuditSession, AuditCategory, AuditQuestion
 
-DB = MongoClient('mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true')['masys']
+DB = MongoClient('mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true')['coba']
 
 def cek_mongodb(name_collection, id):
     # Check that the files were saved to the child collection

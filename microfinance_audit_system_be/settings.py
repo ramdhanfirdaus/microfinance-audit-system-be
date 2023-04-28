@@ -95,7 +95,7 @@ password = config.get('credentials', 'db-password')
 DATABASES = {
        'default': {
            'ENGINE': 'djongo',
-           'NAME': 'masys',
+           'NAME': 'coba',
            'CLIENT' : {
             'host' : 'mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true&w=majority',
             'uuidRepresentation': 'standard',
