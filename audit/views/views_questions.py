@@ -98,7 +98,10 @@ def query_sample(id_session, query, sort, limit):
 
     if data_count != 0:
         child_collection = collection[data_name]
-        data = list(child_collection.find(query, {"_id": 0}).sort(sort).limit(limit))
+        if sort == {}:
+            data = list(child_collection.find(query, {"_id": 0}).limit(limit))
+        else:
+            data = list(child_collection.find(query, {"_id": 0}).sort(sort).limit(limit))
         return json.dumps(data)
     else:
         raise ValueError("Data audit cannot be empty.")
