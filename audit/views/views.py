@@ -23,13 +23,23 @@ def get_all_auditors(request):
     serializer = AuditorSerializer(auditors, many=True)
     return JsonResponse(serializer.data, safe=False)
 
-@api_view(['PUT'])
+@api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def create_new_audit_session(request, id): #create a new audit session with spesific audit type 
-    AuditSession.objects.update_or_create(
-        type = AuditType.objects.get(id = int(id))
+def create_new_audit_session(request, id): #create a new audit session with spesific audit type
+    new_session = AuditSession.objects.create(
+        type=AuditType.objects.get(id=int(id))
     )
-    return HttpResponse(200)
+    
+    auditor_ids = request.POST.get('auditor_ids')
+
+    for auditor_id in auditor_ids:
+        auditor = Auditor.objects.get(id=auditor_id)
+        auditor.on_audit = True
+        auditor.session = new_session
+
+        auditor.save()
+
+    return Response(data={'message': "Sesi Audit baru berhasil dibuat", 'new_session_id': new_session.id}, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
 def post_audit_data(request):
