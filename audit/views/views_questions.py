@@ -5,14 +5,14 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
 from django.views.decorators.http import require_POST, require_GET
 from pymongo import MongoClient
 import json, re, zipfile
 
-from audit.models import AuditQuestion, AuditSession, AuditType
-
-
+from audit.models import AuditQuestion, AuditSession
+from audit.serializer import AuditQuestionSerializer
 @require_GET
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -97,7 +97,10 @@ def query_sample(id_session, query, sort, limit):
 
     if data_count != 0:
         child_collection = collection[data_name]
-        data = list(child_collection.find(query, {"_id": 0}).sort(sort).limit(limit))
+        if sort == {}:
+            data = list(child_collection.find(query, {"_id": 0}).limit(limit))
+        else:
+            data = list(child_collection.find(query, {"_id": 0}).sort(sort).limit(limit))
         return json.dumps(data)
     else:
         raise ValueError("Data audit cannot be empty.")
