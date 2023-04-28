@@ -11,8 +11,9 @@ from django.views.decorators.http import require_POST, require_GET
 from pymongo import MongoClient
 import json, re, zipfile
 
-from audit.models import AuditQuestion, AuditSession
+from audit.models import AuditQuestion, AuditSession, AuditCategory
 from audit.serializer import AuditQuestionSerializer
+
 @require_GET
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -162,3 +163,46 @@ def extract_zip(zip_file):
             result_data[filename] = file_data
 
     return result_data
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_audit_question(request, id):
+    try :
+        audit_questions = AuditQuestion.objects.filter(audit_category = int(id))
+
+        if len(audit_questions) == 0 :
+            raise ObjectDoesNotExist
+        
+    except ObjectDoesNotExist :
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    
+    serializer = AuditQuestionSerializer(audit_questions, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+def get_all_audit_questions(request):
+    try :
+        audit_questions = AuditQuestion.objects.all()
+
+        if len(audit_questions) == 0 :
+            raise ObjectDoesNotExist
+        
+    except ObjectDoesNotExist :
+        return Response(data={'message':"Belum ada Audit Question"}, status=status.HTTP_200_OK)
+    
+    serializer = AuditQuestionSerializer(audit_questions, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_audit_question(request):
+    
+    AuditQuestion.objects.create(
+        title = request.POST.get('title'),
+        audit_category = AuditCategory.objects.get(id=request.POST.get('audit_category_id')),
+    )
+
+    return Response(data={'message': "Audit Question baru berhasil ditambahkan"}, status=status.HTTP_200_OK)
