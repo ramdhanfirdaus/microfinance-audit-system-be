@@ -163,7 +163,7 @@ class GetAuditCategoriesViewTestCase(unittest.TestCase):
         self.assertEqual(response.data, serializer_data)
 
     def test_get_audit_categories_view_with_invalid_audit_type(self):
-        response = self.client.get('/audit/audit-categories/1101')
+        response = self.client.get('/audit/audit-categories/-1')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 

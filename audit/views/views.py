@@ -1,9 +1,8 @@
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated
 
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.http import HttpResponse, JsonResponse
 
 from pymongo import MongoClient
@@ -13,17 +12,9 @@ import zipfile
 import openpyxl
 import re
 
-from audit.models import AuditQuestion, AuditType, AuditSession, AuditCategory
-from audit.serializer import  AuditQuestionSerializer, AuditTypeSerializer, AuditCategorySerializer
+from audit.models import AuditType, AuditSession
 from authentication.models import Auditor
 from authentication.serializer import AuditorSerializer
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_all_audit_types(request): #return all audit types
-    types = AuditType.objects.all()
-    serializer = AuditTypeSerializer(types, many=True)
-    return JsonResponse(serializer.data, safe=False)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -39,22 +30,6 @@ def create_new_audit_session(request, id): #create a new audit session with spes
         type = AuditType.objects.get(id = int(id))
     )
     return HttpResponse(200)
-
-@api_view(['GET'])
-def get_audit_categories(request, id):
-    print(id)
-
-    try :
-        audit_categories = AuditCategory.objects.filter(audit_type = int(id))
-
-        if len(audit_categories) == 0 :
-            raise ObjectDoesNotExist
-        
-    except ObjectDoesNotExist :
-        return Response(status=status.HTTP_404_NOT_FOUND)
-    
-    serializer = AuditCategorySerializer(audit_categories, many=True)
-    return Response(serializer.data)
 
 @api_view(['POST'])
 def post_audit_data(request):
