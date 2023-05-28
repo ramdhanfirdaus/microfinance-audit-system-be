@@ -31,7 +31,7 @@ class PostAuditTypeTest(unittest.TestCase):
     def delete_object_type(self, label):
         try:
             AuditType.objects.get(label=label).delete()
-        except:
+        except Exception:
             pass
 
     def post_audit_type(self, token, audit_type):
@@ -61,4 +61,3 @@ class PostAuditTypeTest(unittest.TestCase):
         response = self.post_audit_type(self.tokens['access'], self.audit_type_data_1)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.json()['error'], 'Sudah ada kategori dengan nama yang sama')
-   
