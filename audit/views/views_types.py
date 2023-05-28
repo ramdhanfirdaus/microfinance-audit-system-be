@@ -1,13 +1,13 @@
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_GET, require_POST
 from django.http import JsonResponse
 
 from audit.models import AuditType
 from audit.serializer import  AuditTypeSerializer
 
-
+@require_GET
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_all_audit_types(request): #return all audit types
@@ -21,8 +21,7 @@ def get_all_audit_types(request): #return all audit types
 def post_audit_type(request):
     label = request.POST.get('label')
     if label:
-        label = label.lower()
-        existing_audit_type = AuditType.objects.filter(label=label).first()
+        existing_audit_type = AuditType.objects.filter(label__iexact=label).first()
         if existing_audit_type:
             return JsonResponse({'error': 'Sudah ada kategori dengan nama yang sama'}, status=400)
         audit_type = AuditType(label=label)

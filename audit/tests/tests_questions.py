@@ -11,7 +11,7 @@ from requests_toolbelt.multipart.encoder import MultipartEncoder
 
 import unittest, tempfile, pytest, json
 
-from audit.models import AuditSession
+from audit.models import AuditSession, AuditQuestion, AuditCategory, AuditType
 from audit.views.views_questions import save_attachment, save_comment_remark, query_sample, manage_query, query_date, json_converter
 from audit.test_utils import cek_mongodb, create_test_zip, delete_audit_question_session, login_test, test_post_audit_data, \
    create_test_objects, delete_test_objects
@@ -21,11 +21,6 @@ class GetSampleTestCase(unittest.TestCase):
     def setUp(self):
         self.client = APIClient()
         create_test_objects()
-
-        client = MongoClient('mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true')
-        db = client['coba']
-        collection = db['audit_data']
-        collection.insert_one({'name': 'audit-data-123'})
 
     def tearDown(self):
         delete_audit_question_session('audit_data', 'audit-data', '123')
@@ -48,7 +43,7 @@ class GetSampleTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_get_sample_not_have_data(self):
-        test_post_audit_data(self.client)
+        test_post_audit_data()
 
         tokens = login_test()
         response = self.get_sample(tokens['access'], "456", "456")
@@ -56,9 +51,8 @@ class GetSampleTestCase(unittest.TestCase):
         # Check that the response has a 404 NOT FOUND status code
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-
     def test_get_sample_not_have_query(self):
-        test_post_audit_data(self.client)
+        test_post_audit_data()
 
         tokens = login_test()
         response = self.get_sample(tokens['access'], "456", "789")
@@ -67,7 +61,7 @@ class GetSampleTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_get_sample_have_data(self):
-        test_post_audit_data(self.client)
+        test_post_audit_data()
 
         tokens = login_test()
         response = self.get_sample(tokens['access'], "123", "123")
@@ -191,11 +185,11 @@ class QueryQuestionTestCase(unittest.TestCase):
         self.client = APIClient()
 
         client = MongoClient('mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true')
-        db = client['coba']
+        db = client[config.get('credentials', 'database')]
         collection = db['audit_data']
         collection.insert_one({'name': 'audit-data-123'})
 
-        test_post_audit_data(self.client)
+        test_post_audit_data()
 
     def tearDown(self):
         delete_audit_question_session('audit_data', 'audit-data', '123')
@@ -204,6 +198,17 @@ class QueryQuestionTestCase(unittest.TestCase):
         id_session = "123"
         query = {'Name': 'Alice'}
         sort = [("Age", 1)]
+        limit = 0
+
+        result = query_sample(id_session, query, sort, limit)
+        result_list = json.loads(result)
+
+        self.assertEqual(result_list[0]["Name"], 'Alice')
+
+    def test_query_sample_with_empty_sort(self):
+        id_session = "123"
+        query = {'Name': 'Alice'}
+        sort = {}
         limit = 0
 
         result = query_sample(id_session, query, sort, limit)
@@ -241,6 +246,7 @@ class PostAuditQuestionSessionTestCase(unittest.TestCase):
         with open(self.temp_file.name, 'rb') as f:
             multipart_data = MultipartEncoder(fields={
                 'id_audit': 'test',
+                'id_question': 'test',
                 'comment': 'test',
                 'remark': 'test',
                 'attachment': ('filename.zip', f, 'application/zip')
@@ -313,3 +319,158 @@ class SaveCommentRemarkTestCase(unittest.TestCase):
         self.assertIn('remark', data.keys())
         self.assertEqual(data['comment'], comment)
         self.assertEqual(data['remark'], remark)
+
+class GetAllAuditQuestionsTest(unittest.TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.tokens = login_test()
+
+    def tearDown(self) -> None:
+        return super().tearDown()
+
+    def get_all_audit_questions(self, token):
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
+        return self.client.get('/audit/get-all-audit-questions')
+
+    def test_get_all_audit_questions_not_login(self):
+        response = self.get_all_audit_questions('token')
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_all_audit_questions_success(self):
+        response = self.get_all_audit_questions(self.tokens['access'])
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        count = AuditQuestion.objects.count()
+        response_count = len(response.json())
+        self.assertEqual(count, response_count)
+
+class AddAuditQuestionTest(unittest.TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.tokens = login_test()
+
+        self.audit_type = AuditType.objects.create(label='Some Audit Type')
+        self.audit_category = AuditCategory.objects.create(title='Some Audit Category', audit_type=self.audit_type)
+
+    def tearDown(self) -> None:
+        self.audit_type.delete()
+        self.audit_category.delete()
+        return super().tearDown()
+
+    def add_audit_question(self, token, data):
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
+        return self.client.post('/audit/add-audit-question', data=data)
+
+    def test_add_audit_question_not_login(self):
+        data = {
+            'title': 'titleunikunikunik',
+            'audit_category_id': self.audit_category.id
+        }
+
+        response = self.add_audit_question('token', data)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_add_audit_question_success(self):
+        data = {
+            'title': 'titleunikunikunik',
+            'audit_category_id': self.audit_category.id
+        }
+
+        response = self.add_audit_question(self.tokens['access'], data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_add_audit_question_already_exists(self):
+        data = {
+            'title': 'titleunikunikunik',
+            'audit_category_id': self.audit_category.id
+        }
+
+        existing_audit_question = AuditQuestion.objects.create(title='title', audit_category=self.audit_category)
+
+        response = self.add_audit_question(self.tokens['access'], data)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.json(), {'error': 'Sudah ada question dengan nama yang sama'})
+
+        # Cleanup
+        existing_audit_question.delete()
+
+    def test_add_audit_question_missing_parameters(self):
+        data = {
+            'audit_category_id': self.audit_category.id
+        }
+
+        response = self.add_audit_question(self.tokens['access'], data)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.json(), {'error': 'Missing required parameters'})
+
+
+class GetAuditQuestionByIdTest(unittest.TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.tokens = login_test()
+        create_test_objects()
+
+    def tearDown(self) -> None:
+        delete_test_objects()
+        return super().tearDown()
+
+    def get_audit_questions_by_id(self, token, id):
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
+        return self.client.get('/audit/get-audit-questions-by-id/' + id)
+
+    def test_get_audit_question_by_id_not_login(self):
+        response = self.get_audit_questions_by_id('token', "123")
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_audit_question_by_id_not_found(self):
+        response = self.get_audit_questions_by_id(self.tokens['access'], "0")
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_audit_question_by_id_success(self):
+        response = self.get_audit_questions_by_id(self.tokens['access'], "123")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+class SaveQueryTest(unittest.TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.tokens = login_test()
+
+        self.audit_type = AuditType.objects.create(label='Some Audit Type')
+        self.audit_category = AuditCategory.objects.create(title='Some Audit Category', audit_type=self.audit_type)
+        self.audit_question = AuditQuestion.objects.create(title='Some Audit Question', audit_category=self.audit_category)
+
+    def tearDown(self) -> None:
+        self.audit_type.delete()
+        self.audit_category.delete()
+        self.audit_question.delete()
+        return super().tearDown()
+
+    def save_query(self, token, data):
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
+        return self.client.post('/audit/save-query', data=data)
+
+    def test_save_query_not_login(self):
+        data = {
+            'title': 'titleunikunikunik',
+            'audit_category_id': self.audit_category.id
+        }
+
+        response = self.save_query('token', data)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_save_query_success(self):
+        data = {
+            'id_question': self.audit_question.id,
+            'query': '{}'
+        }
+
+        response = self.save_query(self.tokens['access'], data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

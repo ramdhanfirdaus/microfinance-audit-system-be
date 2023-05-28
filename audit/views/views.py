@@ -3,7 +3,8 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
+from django.views.decorators.http import require_GET, require_POST
 
 from pymongo import MongoClient
 from io import BytesIO
@@ -16,6 +17,7 @@ from audit.models import AuditType, AuditSession
 from authentication.models import Auditor
 from authentication.serializer import AuditorSerializer
 
+@require_GET
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_all_auditors(request):
@@ -23,6 +25,7 @@ def get_all_auditors(request):
     serializer = AuditorSerializer(auditors, many=True)
     return JsonResponse(serializer.data, safe=False)
 
+@require_POST
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_new_audit_session(request, id): #create a new audit session with spesific audit type
@@ -30,7 +33,7 @@ def create_new_audit_session(request, id): #create a new audit session with spes
         type=AuditType.objects.get(id=int(id))
     )
     
-    auditor_ids = request.POST.get('auditor_ids')
+    auditor_ids = [int(auditor_id) for auditor_id in request.POST.get('auditor_ids').split(',')]
 
     for auditor_id in auditor_ids:
         auditor = Auditor.objects.get(id=auditor_id)
@@ -41,6 +44,7 @@ def create_new_audit_session(request, id): #create a new audit session with spes
 
     return Response(data={'message': "Sesi Audit baru berhasil dibuat", 'new_session_id': new_session.id}, status=status.HTTP_200_OK)
 
+@require_POST
 @api_view(['POST'])
 def post_audit_data(request):
     zip_file = request.FILES.get('file')
@@ -76,13 +80,9 @@ def extract_zip(zip_file):
     return result_data
 
 def extract_files(files):
-    pattern = r'^\w+\.xlsx$'
     data = []
 
     for filename, file_data in files.items():
-        if not re.match(pattern, filename) :
-            continue
-
         file_obj = BytesIO(file_data)
         workbook = openpyxl.load_workbook(file_obj)
         worksheet = workbook['Sheet1']
@@ -103,7 +103,12 @@ def extract_files(files):
 
 def get_collection(data_name):
     client = MongoClient('mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true')
-    db = client['coba']
+    db = client[config.get('credentials', 'database')]
     collection = db['audit_data']
+
+    data_count = collection.count_documents({'name': data_name})
+
+    if data_count == 0 :
+        collection.insert_one({'name': data_name})
 
     return collection[data_name]

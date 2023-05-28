@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <title>Lembar Hasil Pemeriksaan</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          margin: 0;
+          padding: 20px;
+        }
+        
+        h2 {
+          text-align: center;
+          margin-bottom: 20px;
+        }
+        
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-bottom: 20px;
+        }
+        
+        th, td {
+          border: 1px solid #ddd;
+          padding: 8px;
+        }
+        
+        th {
+          background-color: #f2f2f2;
+          font-weight: bold;
+          text-align: left;
+        }
+
+        th:nth-child(1), td:nth-child(1) {
+            width: 10%;
+        }
+
+        th:nth-child(2), td:nth-child(2) {
+            width: 30%;
+        }
+
+        th:nth-child(3), td:nth-child(3) {
+            width: 50%
+        }
+
+        th:nth-child(4), td:nth-child(4) {
+            width: 10%
+        }
+
+        p {
+          margin-bottom: 10px;
+        }
+
+        ul {
+            list-style-position: inside;
+            margin: 0;
+            padding: 0;
+            margin-left: 30px;
+        }
+
+        .category-name {
+            padding-left: 30px;
+        }
+      </style>
+   </head>
+	
+   <body>
+    <p>
+        PT BPR Kreasi Nusantara - KPO<br>
+        Jalan Pahlawan Revolusi No 2
+    </p>
+    
+    <h2>LEMBAR HASIL PEMERIKSAAN</h2>
+    
+    <table>
+        <tr>
+            <td colspan="4">
+                Tipe Audit: {{dto.type_label}}<br>
+                Masa Aktif Audit: {{dto.start_date}} - {{dto.end_date}} <br>
+                Tim Auditor: <br>
+                <ul>
+                    {% for auditor in dto.tim_auditor %}
+                        <li>{{auditor}}</li> 
+                    {% endfor %}
+                </lu>
+                
+            </td>
+        </tr>
+        <tr>
+            <th>No</th>
+            <th>Perihal</th>
+            <th>Catatan</th>
+            <th>Remark</th>
+        </tr>
+        {% for category in dto.categories %}
+            <tr>
+                <th class="category-name" colspan="4">{{category.num_cat}}. {{category.name}}</th>
+            </tr>
+            {% for question in category.questions %}
+                <tr>
+                    <td>{{question.num_question}}</td>
+                    <td>{{question.perihal}}</td>
+                    <td>{{question.catatan}}</td>
+                    <td>{{question.remark}}</td>
+                </tr>
+            {% endfor %}
+        {% endfor %}
+    </table>
+   </body>
+	
+</html>

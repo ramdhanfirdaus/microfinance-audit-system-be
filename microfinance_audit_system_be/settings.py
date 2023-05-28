@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'audit',
     'authentication',
+    'myapp'
 ]
 
 MIDDLEWARE = [
@@ -95,7 +96,7 @@ password = config.get('credentials', 'db-password')
 DATABASES = {
        'default': {
            'ENGINE': 'djongo',
-           'NAME': 'coba',
+           'NAME': config.get('credentials', 'database'),
            'CLIENT' : {
             'host' : 'mongodb+srv://cugil:agill@juubi-microfinance.am8xna1.mongodb.net/?retryWrites=true&w=majority',
             'uuidRepresentation': 'standard',
@@ -123,8 +124,8 @@ REST_FRAMEWORK = {
 # JWT Configuration
 # https://django-rest-framework-simplejwt.readthedocs.io/en/latest/
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=24),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "ROTATE_REFRESH_TOKENS": False,
     "BLACKLIST_AFTER_ROTATION": False,
     "UPDATE_LAST_LOGIN": False,

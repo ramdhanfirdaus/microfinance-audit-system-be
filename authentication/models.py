@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-from audit import models as audit_models #R
+from audit import models as audit_models
 
 # Create your models here.
 
@@ -14,4 +14,8 @@ class Auditor(models.Model):
         on_delete = models.CASCADE,
         blank = True,
         null = True,
-    ) #R
+    )
+    list_history = models.TextField(default='[]')
+
+class Admin(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
